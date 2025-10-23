@@ -11,7 +11,7 @@ import nbformat
 
 warnings.simplefilter(action = "ignore")
 
-database_vendas = pd.read_csv("../2. Bases de Dados/Cafeteria Fictícia Receitas.csv")
+database_vendas = pd.read_csv("data/Cafeteria Fictícia Receitas.csv")
 
 column_map = {
 	"date": "sale_date",
@@ -30,7 +30,7 @@ database_vendas.rename(columns = column_map, inplace = True)
 
 database_vendas.head(10)
 
-database_compras = pd.read_csv("../2. Bases de Dados/Cafeteria Fictícia Custos.csv") # database_estoques
+database_compras = pd.read_csv("data/Cafeteria Fictícia Custos.csv") # database_estoques
 
 column_map = {
    "insumo": "insumo",
@@ -49,7 +49,7 @@ database_compras.rename(columns = column_map, inplace = True)
 
 database_compras.head(10)
 
-database_balanco = pd.read_csv("../2. Bases de Dados/Cafeteria Fictícia Balanço.csv", sep=';', decimal=',', thousands='.')
+database_balanco = pd.read_csv("data/Cafeteria Fictícia Balanço.csv", sep=';', decimal=',', thousands='.')
 
 column_map = {
    "Item": "Item",
