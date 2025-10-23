@@ -1,0 +1,13 @@
+.stApp > header,
+.stApp > section,
+.stApp > div {
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
+
+.stApp [data-testid="stSidebar"], 
+.stApp [data-testid="stHeader"] {
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none;
+}

@@ -1,0 +1,71 @@
+[data-testid="stAppViewContainer"] {
+    padding: 1rem 1rem 0.5rem 1rem !important;
+    background-color: #ffffff;
+}
+
+.block-container {
+    max-width: 50% !important;
+    margin-left: auto;
+    margin-right: auto;
+    padding-top: 1rem !important;
+    padding-bottom: 0.5rem !important;
+}
+
+[data-testid="stHeader"] {
+    background-color: rgba(0,0,0,0);
+}
+
+div[data-testid="stTextInput"] input {
+    background-color: #f0f2f6 !important;
+    border-radius: 8px !important;
+    border: none !important;
+    padding: 16px !important;
+    font-size: 16px !important;
+    color: #000000 !important;
+    font-weight: normal !important;
+}
+
+div[data-testid="stTextInput"] label,
+div[data-testid="stTextInput"] label p {
+    color: #000000 !important;
+    font-size: 16px !important;
+    font-weight: normal !important;
+}
+
+.login-title {
+    text-align: center;
+    font-size: 46px;
+    font-weight: 700;
+    color: #31333F;
+    margin-bottom: 0.2rem;
+}
+
+.stMainBlockContainer div[data-testid="InputInstructions"] {
+    display: none !important;
+}
+
+.st-key-login_btn div[data-testid="stButton"] > button {
+    background-color: #f8f9fa !important;
+    border-radius: 5px !important;
+    transition: all 0.1s ease-in-out !important;
+    margin-top: 1rem !important;
+}
+
+.st-key-login_btn div[data-testid="stButton"] > button:hover {
+    background-color: #e9ecef !important;
+}
+
+.st-key-login_btn div[data-testid="stButton"] > button:active {
+    transform: translateY(1px) !important; 
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+    background-color: #a6a5a5 !important; 
+}
+
+.stAppToolbar button[data-testid="stExpandSidebarButton"] {
+    display: none !important;
+}
+
+.stSidebar {
+    display: none !important;
+
+}
