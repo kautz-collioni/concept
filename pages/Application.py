@@ -291,4 +291,5 @@ def main_app():
 if st.session_state.get('logged_in', False):
     main_app()
 else:
+
     st.switch_page("Login.py")
