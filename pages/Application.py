@@ -110,7 +110,7 @@ def main_app():
             unsafe_allow_html=True
         )
 
-    database = con.database_vendas
+    database = con.database_revenue
 
     # ======================== APP SECTIONS ========================
 
@@ -162,7 +162,7 @@ def main_app():
         st.markdown("---")
         st.subheader("Fluxo de Caixa Projetado")
         st.text("Projeção do resultado da empresa pelos próximos x períodos")
-        st.table(con.df_tabela_final)
+        st.table(con.projected_cash_flow)
         st.markdown("---")
         st.subheader("Controle Gerencial de Estoques por Produto")
         st.plotly_chart(con.figure13, use_container_width=True)
