@@ -11,49 +11,49 @@ import nbformat
 
 warnings.simplefilter(action = "ignore")
 
-database_vendas = pd.read_csv("data/Cafeteria Fictícia Receitas.csv")
+database_revenue = pd.read_excel("data/Cafeteria Fictícia - Planilhas Unificadas.xlsx", sheet_name = "Receita")
 
 column_map = {
-	"date": "sale_date",
-    "money": "price",
-    "coffee_name": "item"
-#   "column_name": "quantity_venda"
+	"Data": "date",
+    "Preço": "price",
+    "Nome do Café": "item"
 }
 
 valid_columns = []
-for column_name in database_vendas.columns:
+for column_name in database_revenue.columns:
     if column_name in column_map.keys():
         valid_columns.append(column_name)
 
-database_vendas = database_vendas[valid_columns]
-database_vendas.rename(columns = column_map, inplace = True)
+database_revenue = database_revenue[valid_columns]
+database_revenue.rename(columns = column_map, inplace = True)
 
-database_vendas.head(10)
+# database_revenue.head(10)
 
-database_compras = pd.read_csv("data/Cafeteria Fictícia Custos.csv") # database_estoques
+database_expense = pd.read_excel("data/Cafeteria Fictícia - Planilhas Unificadas.xlsx", sheet_name = "Despesa")
 
 column_map = {
-   "insumo": "insumo",
-   "quantity_received": "quantity_received",
-   "unit_cost": "unit_cost",
-   "date_received": "date_received",
+	"Data": "date",
+    "Insumo": "material",
+    "Quantidade Adquirida": "quantity_purchased",
+    "Custo Unitário": "unit_cost",
+    "Subtotal": "subtotal"
 }
 
 valid_columns = []
-for column_name in database_compras.columns:
+for column_name in database_expense.columns:
     if column_name in column_map.keys():
         valid_columns.append(column_name)
 
-database_compras = database_compras[valid_columns]
-database_compras.rename(columns = column_map, inplace = True)
+database_expense = database_expense[valid_columns]
+database_expense.rename(columns = column_map, inplace = True)
 
-database_compras.head(10)
+# database_expense.head(10)
 
-database_balanco = pd.read_csv("data/Cafeteria Fictícia Balanço.csv", sep=';', decimal=',', thousands='.')
+database_balance_accounts = pd.read_excel("data/Cafeteria Fictícia - Planilhas Unificadas.xlsx", sheet_name = "Balanço Patrimonial")
 
 column_map = {
-   "Item": "Item",
-   "1T 2024": "1T 2024", # As colunas são os anos
+   "Rubrica": "heading",
+   "1T 2024": "1T 2024",
    "2T 2024": "2T 2024",
    "3T 2024": "3T 2024",
    "4T 2024": "4T 2024",
@@ -64,20 +64,20 @@ column_map = {
 }
 
 valid_columns = []
-for column_name in database_balanco.columns:
+for column_name in database_balance_accounts.columns:
     if column_name in column_map.keys():
         valid_columns.append(column_name)
 
-database_balanco = database_balanco[valid_columns]
-database_balanco.rename(columns = column_map, inplace = True)
+database_balance_accounts = database_balance_accounts[valid_columns]
+database_balance_accounts.rename(columns = column_map, inplace = True)
 
-database_balanco.head(10)
+# database_balance_accounts.head(10)
 
-sales_summary = database_vendas.groupby(["item", "price"]).size().reset_index(name = "quantity")
+sales_summary = database_revenue.groupby(["item", "price"]).size().reset_index(name = "quantity_sold")
 
 figure1 = px.scatter(
-    sales_summary, x = "quantity", y = "price", color = "item", trendline = "ols",
-    labels = {"price": "Preço (R$)", "quantity": "Quantidade", "item": "Item"},
+    sales_summary, x = "quantity_sold", y = "price", color = "item", trendline = "ols",
+    labels = {"price": "Preço (R$)", "quantity_sold": "Quantidade Vendida", "item": "Item"},
     title = "Análise Exploratória — Demandas Inversas", width = 1000, height = 500
 )
 
@@ -92,7 +92,7 @@ figure1.update_layout(
 # figure1.show()
 
 figure2 = px.violin(
-    database_vendas, x = "item",  y = "price", color = "item", box = False, points = "all",
+    database_revenue, x = "item",  y = "price", color = "item", box = False, points = "all",
     labels = {"price": "Preço (R$)", "item": "Item"},
     title = "Análise Exploratória — Distribuições de Preços", width = 1000, height = 500
 )
@@ -109,16 +109,16 @@ figure2.update_layout(
 
 elasticities = []
 
-latest_prices = database_vendas.sort_values("sale_date").groupby("item").tail(1)
+latest_prices = database_revenue.sort_values("date").groupby("item").tail(1)
 latest_prices = latest_prices.set_index("item")["price"]
 
 for item in sales_summary["item"].unique():
     item_data = sales_summary[sales_summary["item"] == item]
 
-    item_data["quantity"] = np.log(item_data["quantity"])
+    item_data["quantity_sold"] = np.log(item_data["quantity_sold"])
     item_data["price"] = np.log(item_data["price"])
 
-    log_log = smf.ols("quantity ~ price", data = item_data).fit()
+    log_log = smf.ols("quantity_sold ~ price", data = item_data).fit()
     beta_0, beta_1 = log_log.params
 
     P0 = latest_prices[item]
@@ -129,7 +129,7 @@ for item in sales_summary["item"].unique():
     elasticities.append({
         "item": item,
         "current_price": P0,
-        "predicted_quantity": Q0,
+        "predicted_quantity_sold": Q0,
         "current_elasticity": np.abs(current_elasticity)
     })
 
@@ -163,17 +163,13 @@ figure3.update_layout(
 
 # figure3.show()
 
-# Tratamento de dados
-
-accumulated_revenue = (database_vendas.groupby(["sale_date", "item"])["price"]
+accumulated_revenue = (database_revenue.groupby(["date", "item"])["price"]
                  .sum().groupby(level = 1 ).cumsum().reset_index(name = "accumulated_revenue"))
 
 accumulated_revenue["accumulated_revenue"] /= 1000
 
-##################################################################################################################
-
-figure4 = px.line(accumulated_revenue, x = "sale_date", y = "accumulated_revenue", color = "item",
-               labels = {"sale_date": "Data", "accumulated_revenue": "Receita acumulada (mil R$)", "item": "Item"},
+figure4 = px.line(accumulated_revenue, x = "date", y = "accumulated_revenue", color = "item",
+               labels = {"date": "Data", "accumulated_revenue": "Receita acumulada (mil R$)", "item": "Item"},
                title = "Análise Exploratória — Receitas Acumuladas", width = 1000, height = 500)
 
 figure4.update_layout(
@@ -186,12 +182,12 @@ figure4.update_layout(
 
 # figure4.show()
 
-daily_revenue = (database_vendas.groupby(["sale_date", "item"])["price"]
+daily_revenue = (database_revenue.groupby(["date", "item"])["price"]
                  .sum().reset_index(name = "daily_revenue"))
 
 figure5 = px.line(
-    daily_revenue, x = "sale_date", y = "daily_revenue", color = "item",
-    labels = {"sale_date": "Data", "daily_revenue": "Receita diária (R$)", "item": "Item"},
+    daily_revenue, x = "date", y = "daily_revenue", color = "item",
+    labels = {"date": "Data", "daily_revenue": "Receita diária (R$)", "item": "Item"},
     title = "Análise Exploratória — Receitas Diárias", width = 1000, height = 500
 )
 
@@ -205,19 +201,19 @@ figure5.update_layout(
 
 # figure5.show()
 
-database_vendas["sale_date"] = pd.to_datetime(database_vendas["sale_date"])
+database_revenue["date"] = pd.to_datetime(database_revenue["date"])
 
 translated_weekdays = {0: "Segunda-feira", 1: "Terça-feira", 2: "Quarta-feira", 3: "Quinta-feira", 4: "Sexta-feira", 5: "Sábado", 6: "Domingo"}
-database_vendas["weekday"] = database_vendas["sale_date"].dt.dayofweek.map(translated_weekdays)
+database_revenue["weekday"] = database_revenue["date"].dt.dayofweek.map(translated_weekdays)
 
-weekdays_revenue = (database_vendas.groupby(["sale_date", "weekday"])["price"]
+weekdays_revenue = (database_revenue.groupby(["date", "weekday"])["price"]
                    .mean().reset_index(name = "weekdays_revenue"))
 
 weekdays_revenue["weekday"] = pd.Categorical(weekdays_revenue["weekday"], ordered = True)
 
 figure6 = px.line(
-    weekdays_revenue, x = "sale_date", y = "weekdays_revenue", color = "weekday",
-    labels = {"sale_date": "Data", "weekdays_revenue": "Receita média (R$)", "weekday": "Dia da semana"},
+    weekdays_revenue, x = "date", y = "weekdays_revenue", color = "weekday",
+    labels = {"date": "Data", "weekdays_revenue": "Receita média (R$)", "weekday": "Dia da semana"},
     title = "Análise Exploratória — Receitas Médias por Dia da Semana", width = 1000, height = 500
 )
 
@@ -233,24 +229,24 @@ figure6.update_layout(
 
 # figure6.show()
 
-daily_revenue = (database_vendas.groupby(["sale_date", "item"])["price"]
+daily_revenue = (database_revenue.groupby(["date", "item"])["price"]
                  .sum().reset_index(name="daily_revenue"))
 
-daily_revenue["sale_date"] = pd.to_datetime(daily_revenue["sale_date"])
-daily_revenue = daily_revenue.set_index("sale_date")
+daily_revenue["date"] = pd.to_datetime(daily_revenue["date"])
+daily_revenue = daily_revenue.set_index("date")
 
 weekly_revenue = (daily_revenue.groupby("item")
                   .resample("W")["daily_revenue"]
                   .mean()
                   .reset_index())
 
-weekly_revenue["total_week"] = weekly_revenue.groupby("sale_date")["daily_revenue"].transform("sum")
+weekly_revenue["total_week"] = weekly_revenue.groupby("date")["daily_revenue"].transform("sum")
 weekly_revenue["percentage_revenue"] = weekly_revenue["daily_revenue"] / weekly_revenue["total_week"] * 100
 
 figure7 = px.area(
     weekly_revenue, 
-    x = "sale_date", y = "percentage_revenue", color = "item",
-    labels = {"sale_date": "Data", "percentage_revenue": "Participação", "item": "Item"},
+    x = "date", y = "percentage_revenue", color = "item",
+    labels = {"date": "Data", "percentage_revenue": "Participação", "item": "Item"},
     title = "Análise Exploratória — Composição Dinâmica da Receita", width = 1000, height = 500
 )
 
@@ -273,9 +269,9 @@ for item in sales_summary["item"].unique():
     item_data = sales_summary[sales_summary["item"] == item]
 
     price_values = item_data[["price"]].values
-    quantity_values = item_data["quantity"].values
+    quantity_sold_values = item_data["quantity_sold"].values
 
-    gam = PoissonGAM(s(0, n_splines = 5, spline_order = 3, constraints = "monotonic_dec")).gridsearch(price_values, quantity_values)
+    gam = PoissonGAM(s(0, n_splines = 5, spline_order = 3, constraints = "monotonic_dec")).gridsearch(price_values, quantity_sold_values)
     price_range = np.linspace(price_values.min(), price_values.max(), 100)
 
     demand_estimated = gam.predict(price_range)
@@ -283,12 +279,12 @@ for item in sales_summary["item"].unique():
 
     optimal_index = np.argmax(revenue_estimated)
     optimal_price = price_range[optimal_index]
-    optimal_quantity = demand_estimated[optimal_index]
+    optimal_quantity_sold = demand_estimated[optimal_index]
 
     optimal_prices.append({
         "item": item,
         "optimal_price": round(optimal_price, 2),
-        "expected_quantity": round(optimal_quantity, 2),
+        "expected_quantity_sold": round(optimal_quantity_sold, 2),
         "expected_revenue": round(revenue_estimated[optimal_index], 2)
     })
 
@@ -297,13 +293,13 @@ for item in sales_summary["item"].unique():
         "demand_estimated": demand_estimated,
         "revenue_estimated": revenue_estimated,
         "optimal_price": optimal_price,
-        "optimal_quantity": optimal_quantity
+        "optimal_quantity_sold": optimal_quantity_sold
     }
 
 figure8 = go.Figure()
 
-colors = ["#1F77B4", "#FF7F0E", "#2CA02C", "#D62728", "#9467BD", 
-          "#8C564B", "#E377C2", "#7F7F7F", "#BCBD22", "#17BECF"]
+colors = ["#636efa", "#ef553b", "#00cc96", "#ab63fa", "#ffa15a", 
+          "#19d3f3", "#ff6692", "#b6e880", "#bcbd22", "#17becf"]
 
 for index, item in enumerate(sales_summary["item"].unique()):
     item_data = sales_summary[sales_summary["item"] == item]
@@ -312,7 +308,7 @@ for index, item in enumerate(sales_summary["item"].unique()):
     visible = (item == sales_summary["item"].unique()[0])
 
     figure8.add_trace(go.Scatter(
-        x = item_data["price"], y = item_data["quantity"], 
+        x = item_data["price"], y = item_data["quantity_sold"], 
         mode = "markers", name = "Observado",
         marker = dict(size = 8, color = color, opacity = 0.6),
         visible = visible, legendgroup = "observed", showlegend = True
@@ -334,7 +330,7 @@ for index, item in enumerate(sales_summary["item"].unique()):
     ))
 
     figure8.add_trace(go.Scatter(
-        x = [result["optimal_price"]], y = [result["optimal_quantity"]],
+        x = [result["optimal_price"]], y = [result["optimal_quantity_sold"]],
         mode = "markers+text", text = [f"Ótimo: R$ {result["optimal_price"]:.2f}"],
         textposition = "top center", marker = dict(color = color, size = 10),
         name = "Ótimo", visible = visible, 
@@ -347,16 +343,16 @@ for item in sales_summary["item"].unique():
     buttons.append({
         "label": item, "method": "update",
         "args": [{"visible": [item == coffee for coffee in sales_summary["item"].unique() for _ in range(4)],
-                  "title": f"Generalized Additive Model (GAM)"}]
+                  "title": f"Forecasting e Relacionados — Generalized Additive Model (GAM)"}]
     })
 
 figure8.update_layout(
-    title = f"Generalized Additive Model (GAM)",
+    title = f"Forecasting e Relacionados — Generalized Additive Model (GAM)",
     title_font_size = 18, font = dict(size = 14, family = "Arial", color = "black"),
     width = 1000, height = 500, plot_bgcolor = "white", paper_bgcolor = "white",
     xaxis = dict(title = "Preço (R$)", showgrid = True, gridcolor = "lightgrey", 
                  zeroline = False, title_font_size = 14),
-    yaxis = dict(title = "Quantidade", showgrid = True, gridcolor = "lightgrey", 
+    yaxis = dict(title = "Quantidade Vendida", showgrid = True, gridcolor = "lightgrey", 
                  zeroline = False, title_font_size = 14),
     yaxis2 = dict(title = "Receita (mil R$)", overlaying = "y", side = "right",
                   showgrid = False, zeroline = False, title_font_size = 14),
@@ -399,7 +395,7 @@ for item in sales_summary["item"].unique():
     optimal_elasticities.append({
         "item": item,
         "optimal_price": optimal_P,
-        "predicted_quantity": optimal_Q,
+        "predicted_quantity_sold": optimal_Q,
         "optimal_elasticity": np.abs(optimal_elasticity)
     })
 
@@ -409,7 +405,7 @@ figure9 = px.bar(
     optimal_elasticities,
     x = "item", y = "optimal_elasticity", color = "item",
     labels = {"item": "Item", "optimal_elasticity": "Nível"},
-    title = "Elasticidades-preço da Demanda Ótimas", width = 1000, height = 500
+    title = "Forecasting e Relacionados — Elasticidades-preço da Demanda Ótimas", width = 1000, height = 500
 )
 
 for index, row in optimal_elasticities.iterrows():
@@ -433,18 +429,18 @@ figure9.update_layout(
 
 # figure9.show()
 
-daily_revenue = (database_vendas.groupby(["sale_date", "item"])["price"]
+daily_revenue = (database_revenue.groupby(["date", "item"])["price"]
                  .sum().reset_index(name = "daily_revenue"))
 
-daily_revenue["sale_date"] = pd.to_datetime(daily_revenue["sale_date"])
+daily_revenue["date"] = pd.to_datetime(daily_revenue["date"])
 
 items_list = list(sales_summary["item"].unique())
 
 decomposition_frames = []
 
 for index, item in enumerate(items_list):
-    series = (daily_revenue.loc[daily_revenue["item"] == item, ["sale_date", "daily_revenue"]]
-                                  .set_index("sale_date")
+    series = (daily_revenue.loc[daily_revenue["item"] == item, ["date", "daily_revenue"]]
+                                  .set_index("date")
                                   .sort_index()
                                   .asfreq("D"))
 
@@ -454,7 +450,7 @@ for index, item in enumerate(items_list):
     stl_result = stl.fit()
 
     decomposition_frame = pd.DataFrame({
-        "sale_date": series.index,
+        "date": series.index,
         "item": item,
         "trend": stl_result.trend,
         "seasonal": stl_result.seasonal,
@@ -480,7 +476,7 @@ for index, item in enumerate(items_list):
 
     figure10.add_trace(
         go.Scatter(
-            x = slice["sale_date"], y = slice["trend"],
+            x = slice["date"], y = slice["trend"],
             mode = "lines", name = "Tendência",
             line = dict(width = 2, color = color),
             visible = is_visible,
@@ -492,7 +488,7 @@ for index, item in enumerate(items_list):
 
     figure10.add_trace(
         go.Scatter(
-            x = slice["sale_date"], y = slice["seasonal"],
+            x = slice["date"], y = slice["seasonal"],
             mode = "lines", name = "Sazonalidade",
             line = dict(width = 2, color = color),
             visible = is_visible,
@@ -504,7 +500,7 @@ for index, item in enumerate(items_list):
 
     figure10.add_trace(
         go.Scatter(
-            x = slice["sale_date"], y = slice["residual"],
+            x = slice["date"], y = slice["residual"],
             mode = "lines", name = "Resíduo",
             line = dict(width = 2, color = color, dash = "dot"),
             visible = is_visible,
@@ -534,7 +530,7 @@ for index, item in enumerate(items_list):
     ))
 
 figure10.update_layout(
-    title = f"Tendência, Sazonalidade e Resíduo",
+    title = f"Forecasting e Relacionados — Tendência, Sazonalidade e Resíduo",
     title_font_size = 18,
     font = dict(size = 14, family = "Arial", color = "black"),
     width = 1000, height = 700,
@@ -566,468 +562,28 @@ figure10.update_yaxes(title_text = "Nível", showgrid = True, gridcolor = "light
 
 # figure10.show()
 
-# TRATAMENTO DOS DADOS
-# Duplicar as bases para não alterar na origem dos dados
-df_custos = database_compras
-df_receitas = database_vendas
-
-df_custos['date_received'] = pd.to_datetime(df_custos['date_received'])
-df_receitas['sale_date'] = pd.to_datetime(df_receitas['sale_date'])
-
-# Calcular saídas (custos)
-df_custos['saidas'] = df_custos['quantity_received'] * df_custos['unit_cost']
-df_custos_mensal = df_custos.groupby(pd.Grouper(key='date_received', freq='M'))['saidas'].sum().reset_index()
-df_custos_mensal.rename(columns={'date_received': 'data'}, inplace=True)
-
-# Calcular entradas (receitas)
-df_receitas_mensal = df_receitas.groupby(pd.Grouper(key='sale_date', freq='M'))['price'].sum().reset_index()
-df_receitas_mensal.rename(columns={'sale_date': 'data', 'price': 'entradas'}, inplace=True)
-
-# Criar range completo de datas
-data_inicio = df_custos['date_received'].min().replace(day=1)
-data_fim = df_receitas['sale_date'].max().replace(day=1) + pd.offsets.MonthEnd(1)
-
-# Criar DataFrame com todas as datas mensais
-all_dates = pd.date_range(start=data_inicio, end=data_fim, freq='M', name='data')
-df_completo = pd.DataFrame({'data': all_dates})
-
-# Juntar todos os dados
-df_fc = df_completo.merge(df_custos_mensal, on='data', how='left')
-df_fc = df_fc.merge(df_receitas_mensal, on='data', how='left')
-
-# Preencher valores NaN com 0
-df_fc['saidas'] = df_fc['saidas'].fillna(0)
-df_fc['entradas'] = df_fc['entradas'].fillna(0)
-
-# Muda o sinal das saídas *Avaliar necessidade dependendo da estrutura da base de dados
-df_fc['saidas'] = df_fc['saidas'] * -1
-
-# Formatar data como string (opcional)
-df_fc['data'] = df_fc['data'].dt.strftime('%Y-%m')
-
-# Definir data como índice
-#df_fc.set_index('data', inplace=True)
-
-# Margem = (Receita - Custo) / Receita
-df_fc['margem_percentual'] = (df_fc['entradas'] - df_fc['saidas'].abs()) / df_fc['entradas']
-# Tratar casos onde 'entradas' é 0 (para evitar NaN/Inf, definimos a margem como 0)
-df_fc['margem_percentual'].fillna(0, inplace=True) 
-df_fc.loc[df_fc['entradas'] == 0, 'margem_percentual'] = 0 
-
-
-
-df_fc_long = df_fc.melt(
-    id_vars=["data"], 
-    value_vars=["entradas", "saidas"], 
-    var_name="type", 
-    value_name="valor"
-)
-
-figure11 = go.Figure()
-
-# 1. Adiciona as barras para cada tipo
-for type_value in df_fc_long['type'].unique():
-    df_filtered = df_fc_long[df_fc_long['type'] == type_value]
-    figure11.add_trace(
-        go.Bar(
-            x=df_filtered["data"],
-            y=df_filtered["valor"],
-            name=type_value,
-        )
-    )
-
-# 2. Adiciona a linha da Margem Percentual
-figure11.add_trace(
-    go.Scatter(
-        x=df_fc["data"],
-        y=df_fc["margem_percentual"],
-        name="Margem (%)",
-        mode='lines+markers+text',
-        yaxis='y2',
-        line=dict(color='darkgrey', width=3),
-        marker=dict(symbol='circle', size=8, color='darkgrey'),
-        text=[f'{p*100:.1f}%' for p in df_fc["margem_percentual"]],
-        textposition="top center",
-        textfont=dict(color='black', size=11, weight='bold')
-    )
-)
-
-# 3. Cria as anotações
-annotations = []
-# Anotações para as barras
-for index, row in df_fc_long.iterrows():
-    # As anotações são aplicadas em 'entradas' e 'saidas'
-    annotations.append(
-        dict(
-            x=row["data"],
-            y=row["valor"],
-            text=f"<b>{row['valor']:.2f}</b>",
-            showarrow=False,
-            font=dict(color="white", size=12),
-            align="center",
-            bordercolor="black",
-            borderwidth=1,
-            bgcolor="black",
-            opacity=0.8,
-            xref="x",
-            yref="y",
-        )
-    )
-        
-# 6. Atualiza o layout
-figure11.update_layout(
-    annotations=annotations,
-    barmode="relative",
-    title_font_size=18,
-    font=dict(size=14, family="Arial", color="black"),
-    plot_bgcolor="white",
-    paper_bgcolor="white",
-    xaxis=dict(
-        showgrid=True,
-        gridcolor="lightgrey",
-        zeroline=False,
-        title_font_size=14
-    ),
-    yaxis=dict(
-        showgrid=True,
-        gridcolor="lightgrey",
-        title_font_size=14,
-    ),
-    yaxis2=dict(
-        title='Margem (%)',
-        overlaying='y',
-        side='right',
-        showgrid=False,
-        tickformat=".1%",
-    ),
-    legend=dict(
-        title="",
-        borderwidth=0,
-        font_size=12,
-        bgcolor="rgba(0,0,0,0)",
-        orientation="v",
-        yanchor="top",
-        y=0.95,
-        xanchor="left",
-        x=1.05
-    ),
-    title="Fluxo de Caixa - Mensal",
-    width=900,
-    height=500,
-)
-
-#figure11.show()
-
-# Anualizar os dados históricos
-
-# Extrair ano diretamente do índice (que está no formato 'YYYY-MM')
-df_anual = df_fc.copy()
-df_anual.set_index('data', inplace=True)
-df_anual['ano'] = df_anual.index.str[:4].astype(int)
-df_anual = df_anual.groupby('ano').agg({
-    'saidas': 'sum',
-    'entradas': 'sum'
-}).reset_index()
-
-# Projeção para 5 anos com crescimento de 10% (Receitas)
-ultimo_ano_historico = df_anual['ano'].max()
-ultima_receita = df_anual[df_anual['ano'] == ultimo_ano_historico]['entradas'].values[0]
-
-anos_projecao = range(ultimo_ano_historico + 1, ultimo_ano_historico + 6)
-projecao_receitas = []
-
-receita_atual = ultima_receita
-for ano in anos_projecao:
-    receita_atual *= 1.10 # Crescimento de 10%
-    projecao_receitas.append({
-        'ano': ano,
-        'Receitas': receita_atual
-})
-
-df_projecao_receita = pd.DataFrame(projecao_receitas)
-
-
-# Criar DataFrame completo de Receitas com histórico + projeção
-df_completo_receita = df_anual[['ano', 'entradas']].copy()
-df_completo_receita.rename(columns={'entradas': 'Receitas'}, inplace=True)
-
-df_completo_receita = pd.concat([
-    df_completo_receita,
-    df_projecao_receita
-], ignore_index=True)
-
-
-# PROJEÇÃO DE DESPESAS E CÁLCULO DA MARGEM
-
-# Projeção para 5 anos com crescimento de 10% (Despesas)
-# Pega a última despesa histórica
-ultima_despesa = df_anual[df_anual['ano'] == ultimo_ano_historico]['saidas'].values[0]
-
-projecao_despesas = []
-despesa_atual = ultima_despesa
-
-for ano in anos_projecao:
-    despesa_atual *= 1.10 # Crescimento de 10%
-    projecao_despesas.append({
-        'ano': ano,
-        'Despesas': despesa_atual
-    })
-
-df_projecao_despesa = pd.DataFrame(projecao_despesas)
-
-
-# DataFrame completo de Despesas com histórico + projeção
-df_completo_despesa = df_anual[['ano', 'saidas']].copy()
-df_completo_despesa.rename(columns={'saidas': 'Despesas'}, inplace=True)
-
-df_completo_despesa = pd.concat([
-    df_completo_despesa,
-    df_projecao_despesa
-], ignore_index=True)
-
-
-# DataFrame Mestre e Calcular a Margem
-# Combina Receitas e Despesas
-df_mestre = pd.merge(df_completo_receita, df_completo_despesa, on='ano', how='inner')
-
-# Calcula a Margem (Receitas - Despesas)
-df_mestre['Margem'] = df_mestre['Receitas'] - df_mestre['Despesas']
-
-# Define o ano como índice
-df_pivot = df_mestre.set_index('ano')
-
-# Transpõe (inverte) o DataFrame para ter Anos nas Colunas e Variáveis nas Linhas
-df_tabela_final = df_pivot.T
-
-# Limpar o nome do índice
-df_tabela_final.index.name = None
-
-print(df_tabela_final)
-
-df_liquidez = database_balanco.copy()
-
-quarter_cols = df_liquidez.columns[1:].tolist()
-
-# Isola Ativo Circulante (AC) e Passivo Circulante (PC)
-ac_values = df_liquidez[df_liquidez['Item'] == 'Ativo Circulante'].iloc[0][quarter_cols]
-pc_values = df_liquidez[df_liquidez['Item'] == 'Passivo Circulante'].iloc[0][quarter_cols]
-
-# Calcula a Liquidez Corrente: LC = Ativo Circulante / Passivo Circulante
-liquidez_corrente = ac_values / pc_values
-
-# Cria o DataFrame no formato "long" (df_fc_long equivalente) para Plotly
-df_liquidez_ratio = pd.DataFrame({
-    'data': quarter_cols,
-    'valor': liquidez_corrente.values
-})
-
-
-# 3. Configuração do Gráfico de Linhas com go.Figure()
-figure12 = go.Figure()
-
-# Adiciona o Trace de Linhas para a Liquidez Corrente
-figure12.add_trace(go.Scatter(
-    x=df_liquidez_ratio["data"],
-    y=df_liquidez_ratio["valor"],
-    mode='lines+markers', # Linha e marcadores para cada ponto
-    name='Liquidez Corrente',
-    #line=dict(color='#006400', width=4), # Linha verde escura
-    marker=dict(size=10),#, color='#3CB371', line=dict(width=2, color='#006400')),
-    hovertemplate="<b>%{x}</b><br>Liquidez Corente: %{y:.2f}<extra></extra>"
-))
-
-
-# 4. Cria a lista de anotações (adaptada para o novo DataFrame e estilo)
-annotations = []
-for index, row in df_liquidez_ratio.iterrows():
-    if pd.notna(row['valor']):
-        annotations.append(
-            dict(
-                x=row["data"],
-                y=row["valor"],
-                text=f"<b>{row['valor']:.2f}</b>", # Formato com 2 casas decimais
-                showarrow=False,
-                font=dict(color="white", size=12),
-                align="center",
-                bordercolor="black",
-                borderwidth=1,
-                bgcolor="black", # Cor de fundo da anotação (verde escuro)
-                opacity=0.8,
-                xanchor="center",
-                yanchor="bottom",
-                yshift=10, # Desloca o texto um pouco acima do marcador
-                xref="x", 
-                yref="y", 
-            )
-        )
-
-# 5. Aplica os ajustes finais de layout (incluindo as anotações)
-figure12.update_layout(
-    annotations=annotations, # Adiciona as anotações
-
-    # 'barmode' é ignorado para gráfico de linha/scatter, mas mantido da sua template
-    # barmode="relative", 
-
-    # Configurações de Título e Fonte Geral
-    title= "Liquidez Corrente",
-    title_font_size = 18,
-    font = dict(size = 14, family = "Arial", color = "black"),
-    
-    # Cores de Fundo (Ajustado para branco, seguindo o estilo de figure10)
-    plot_bgcolor = "white",
-    paper_bgcolor = "white",
-    
-    # Configurações do Eixo X
-    xaxis = dict(
-        title = "Trimestre", # Título para o Eixo X
-        showgrid = True, 
-        gridcolor = "lightgrey", 
-        zeroline = False, 
-        title_font_size = 14
-    ),
-    
-    # Configurações do Eixo Y
-    yaxis = dict(
-        title = "Liquidez Corrente", # Título para o Eixo Y
-        showgrid = True, 
-        gridcolor = "lightgrey", 
-        zeroline = False, 
-        title_font_size = 14,
-        tickformat=".2f" # Força 2 casas decimais nos ticks
-    ),
-
-    # Configurações da Legenda
-    legend = dict(
-        title = "", 
-        borderwidth = 0, 
-        font_size = 12, 
-        bgcolor = "rgba(0,0,0,0)",
-        orientation="v", 
-        yanchor="top", 
-        y=0.95, 
-        xanchor="left", 
-        x=1.05 
-    ),
-    
-    width=900,
-    height=500,
-)
-
-#figure12.show()
-
-
-# Entradas de estoque
-entradas = (
-    database_compras
-    .rename(columns={'insumo': 'item', 'date_received': 'data'})
-    .assign(qtd=lambda x: x['quantity_received'])
-    [['data', 'item', 'qtd']]
-)
-
-# Saídas de estoque (cada venda = -1 unidade)
-saidas = (
-    database_vendas
-    .rename(columns={'sale_date': 'data'})
-    .assign(qtd=-1)
-    [['data', 'item', 'qtd']]
-)
-
-# Combina entradas e saídas
-estoque = pd.concat([entradas, saidas], ignore_index=True)
-estoque['data'] = pd.to_datetime(estoque['data'])
-
-# Ordena por data
-estoque = estoque.sort_values(by=['item', 'data'])
-
-# Calcula o estoque acumulado
-estoque['estoque'] = estoque.groupby('item')['qtd'].cumsum()
-
-# Cria uma grade de datas para preencher eventuais dias sem movimento
-estoque_completo = (
-    estoque.groupby('item', group_keys=False)
-    .apply(lambda g: (
-        g.set_index('data')
-         .resample('D')
-         .sum()
-         .assign(item=g.name)
-         .reset_index()
-    ))
-)
-
-# Calcula o estoque acumulado e preenche valores ausentes
-estoque_completo['estoque'] = (
-    estoque_completo.groupby('item')['qtd']
-    .cumsum()
-)
-
-# Preenche valores ausentes propagando o último estoque conhecido
-estoque_completo['estoque'] = (
-    estoque_completo.groupby('item')['estoque']
-    .fillna(method='ffill')
-    .fillna(0)
-)
-
-# --- Gráfico interativo estilizado ---
-figure13 = px.line(
-    estoque_completo,
-    x='data',
-    y='estoque',
-    color='item',
-    title='Evolução do Estoque por Produto',
-    labels={'data': 'Data', 'estoque': 'Quantidade em Estoque', 'item': 'Produto'}
-)
-
-# Remove os markers (deixa apenas a linha)
-figure13.update_traces(mode='lines')
-
-# Ajusta o layout visual
-figure13.update_layout(
-    title_font_size=18,
-    font=dict(size=14, family="Arial", color="black"),
-    plot_bgcolor="white",
-    paper_bgcolor="white",
-    legend=dict(title="", font_size=12, bgcolor="rgba(0,0,0,0)"),
-    xaxis=dict(
-        showgrid=True,
-        gridcolor="lightgrey",
-        zeroline=False,
-        title_font_size=14,
-        tickformat="%d/%m/%Y"
-    ),
-    yaxis=dict(
-        showgrid=True,
-        gridcolor="lightgrey",
-        zeroline=False,
-        title_font_size=14
-    ),
-    hovermode='x unified',
-    legend_title_text='Produto'
-)
-
-#figure13.show()
-
 comparison_table = pd.DataFrame(optimal_prices)
 
 comparison_table["current_price"] = comparison_table["item"].map(latest_prices)
 comparison_table["percent_difference"] = (comparison_table["optimal_price"] - comparison_table["current_price"]) / comparison_table["current_price"] * 100
-comparison_table["estimated_revenue"] = comparison_table["optimal_price"] * comparison_table["expected_quantity"]
+comparison_table["estimated_revenue"] = comparison_table["optimal_price"] * comparison_table["expected_quantity_sold"]
 
 comparison_table = comparison_table[[
     "item",
     "current_price",
     "optimal_price",
     "percent_difference",
-    "expected_quantity",
+    "expected_quantity_sold",
     "estimated_revenue"
 ]]
 
 comparison_table.columns = [
     "Item",
-    "Preço atual (R$)",
-    "Preço ótimo (R$)",
+    "Preço Atual (R$)",
+    "Preço Ótimo (R$)",
     "Diferença (%)",
-    "Quantidade estimada",
-    "Receita estimada (R$)"
+    "Quantidade Vendida Estimada",
+    "Receita Estimada (R$)"
 ]
 
 # comparison_table.to_csv("Entregável - Tabela de Comparação.csv", sep = ";", decimal = ",", index = False, encoding = "utf-8-sig")
@@ -1035,7 +591,356 @@ comparison_table.columns = [
 # revision = pd.read_csv("Entregável - Tabela de Comparação.csv", sep = ";", decimal = ",")
 # revision.sample(5)
 
-with open("Script Consolidado (12-10-2025 G).ipynb", "r", encoding = "utf-8") as f:
+database_revenue["date"] = pd.to_datetime(database_revenue["date"])
+database_expense["date"] = pd.to_datetime(database_expense["date"])
+
+monthly_revenue = database_revenue.groupby(pd.Grouper(key = "date", freq = "M"))["price"].sum().reset_index()
+monthly_revenue.rename(columns = {"price": "monthly_revenue"}, inplace = True)
+
+monthly_expense = database_expense.groupby(pd.Grouper(key = "date", freq = "M"))["subtotal"].sum().reset_index()
+monthly_expense.rename(columns = {"subtotal": "monthly_expense"}, inplace = True)
+
+date_range = pd.date_range(start = monthly_revenue["date"].min(), end = monthly_revenue["date"].max(), freq = "M")
+calendar = pd.DataFrame({"date": date_range})
+
+cash_flow = calendar.merge(monthly_revenue, on = "date", how = "left")
+cash_flow = cash_flow.merge(monthly_expense, on = "date", how = "left")
+cash_flow.fillna(0, inplace = True)
+
+cash_flow["net_income"] = cash_flow["monthly_revenue"] - cash_flow["monthly_expense"]
+cash_flow["net_margin_percentage"] = (cash_flow["net_income"] / cash_flow["monthly_revenue"]) * 100
+cash_flow["net_margin_percentage"].replace([np.inf, -np.inf], 0, inplace = True)
+
+cash_flow["monthly_revenue"] = cash_flow["monthly_revenue"] / 1000
+cash_flow["monthly_expense"] = cash_flow["monthly_expense"] / 1000
+
+figure11 = go.Figure()
+
+figure11.add_trace(go.Bar(
+    x = cash_flow["date"],
+    y = cash_flow["monthly_revenue"],
+    name = "Entradas",
+    marker_color = "#00cc96",
+))
+
+figure11.add_trace(go.Bar(
+    x = cash_flow["date"],
+    y = -cash_flow["monthly_expense"],
+    name = "Saídas",
+    marker_color = "#ef553b",
+))
+
+figure11.add_trace(go.Scatter(
+    x = cash_flow["date"],
+    y = cash_flow["net_margin_percentage"],
+    name = "Margem Líquida",
+    line = dict(color = "#636efa", width = 3, dash = "dot"),
+    yaxis = "y2"
+))
+
+figure11.update_layout(
+    title = "Fluxo de Caixa e Estoque — Movimentações Mensais",
+    xaxis_title = "Data",
+    yaxis_title = "Movimentação (R$ mil)",
+    yaxis2 = dict(
+        title = "Margem Líquida (%)",
+        overlaying = "y",
+        side = "right",
+        range = [cash_flow["net_margin_percentage"].min() - 10, cash_flow["net_margin_percentage"].max() + 10],
+        title_font_size = 14
+    ),
+    title_font_size = 18,
+    font = dict(size = 14, family = "Arial", color = "black"),
+    plot_bgcolor = "white",
+    paper_bgcolor = "white",
+    legend = dict(title = "", font_size = 12, bgcolor = "rgba(0,0,0,0)",
+                  x = 1.1, y = 1, xanchor= "left", yanchor = "top"),
+    xaxis = dict(
+        showgrid = True, 
+        gridcolor = "lightgrey", 
+        zeroline = False, 
+        title_font_size = 14,
+        tickformat = "%m/%Y",
+        dtick = "M1"
+    ),
+    yaxis = dict(
+        showgrid = True, 
+        gridcolor = "lightgrey", 
+        zeroline = False, 
+        title_font_size = 14
+    ),
+    barmode = "relative",
+    width = 1000, height = 500
+)
+
+# figure11.show()
+
+annual_cash_flow = cash_flow.copy()
+annual_cash_flow.set_index('date', inplace=True)
+annual_cash_flow['year'] = annual_cash_flow.index.year
+annual_cash_flow = annual_cash_flow.groupby('year').agg({
+    'monthly_expense': 'sum',
+    'monthly_revenue': 'sum'
+}).reset_index()
+annual_cash_flow.rename(columns={'monthly_expense': 'annual_expense', 'monthly_revenue': 'annual_revenue'}, inplace=True)
+
+last_year_cashflow = annual_cash_flow['year'].max()
+projection_range = range(last_year_cashflow + 1, last_year_cashflow + 6)
+
+last_revenue = annual_cash_flow[annual_cash_flow['year'] == last_year_cashflow]['annual_revenue'].values[0]
+revenue_projection = []
+
+# Revenue Projection
+actual_revenue = last_revenue
+for year in projection_range:
+    actual_revenue *= 1.10 # Adjustable
+    revenue_projection.append({
+        'year': year,
+        'Receitas': actual_revenue
+})
+    
+revenue_projection = pd.DataFrame(revenue_projection)
+
+projected_cash_flow_revenue = annual_cash_flow[['year', 'annual_revenue']].copy()
+projected_cash_flow_revenue.rename(columns={'annual_revenue': 'Receitas'}, inplace=True)
+projected_cash_flow_revenue = pd.concat([
+    projected_cash_flow_revenue,
+    revenue_projection
+], ignore_index=True)
+
+
+# Expense and Margin Projection
+last_expense = annual_cash_flow[annual_cash_flow['year'] == last_year_cashflow]['annual_expense'].values[0]
+
+expense_projection = []
+actual_expense = last_expense
+for year in projection_range:
+    actual_expense *= 1.10 # Adjustable
+    expense_projection.append({
+        'year': year,
+        'Despesas': actual_expense
+})
+
+expense_projection = pd.DataFrame(expense_projection)
+
+projected_cash_flow_expense = annual_cash_flow[['year', 'annual_expense']].copy()
+projected_cash_flow_expense.rename(columns={'annual_expense': 'Despesas'}, inplace=True)
+projected_cash_flow_expense = pd.concat([
+    projected_cash_flow_expense,
+    expense_projection
+], ignore_index=True)
+
+# Projected cash flow
+projected_cash_flow = pd.merge(projected_cash_flow_revenue, projected_cash_flow_expense, on='year', how='inner')
+
+# Projected Margin
+projected_cash_flow['Margem'] = projected_cash_flow['Receitas'] - projected_cash_flow['Despesas']
+
+projected_cash_flow.rename(columns={'year': 'Ano'}, inplace=True)
+projected_cash_flow = projected_cash_flow.set_index('Ano')
+projected_cash_flow = projected_cash_flow.T
+projected_cash_flow.index.name = None
+
+print(projected_cash_flow)
+
+database_balance_accounts.set_index("heading", inplace = True)
+database_balance_accounts = database_balance_accounts.apply(pd.to_numeric, errors = "coerce")
+
+quarters = database_balance_accounts.columns.tolist()
+
+current_liquidity = []
+quick_liquidity = []
+immediate_liquidity = []
+
+for quarter in quarters:
+    current_assets = database_balance_accounts.loc["Ativo Circulante", quarter]
+    inventory = database_balance_accounts.loc["Estoque", quarter]
+    cash_equivalents = database_balance_accounts.loc["Caixa e Equivalentes de Caixa", quarter]
+    current_liabilities = database_balance_accounts.loc["Passivo Circulante", quarter]
+
+    liquidity_current = current_assets / current_liabilities
+    liquidity_quick = (current_assets - inventory) / current_liabilities
+    liquidity_immediate = cash_equivalents / current_liabilities
+
+    current_liquidity.append(liquidity_current)
+    quick_liquidity.append(liquidity_quick)
+    immediate_liquidity.append(liquidity_immediate)
+
+liquidity_ratios = pd.DataFrame({
+    "Trimestre": quarters,
+    "Liquidez Corrente": current_liquidity,
+    "Liquidez Seca": quick_liquidity,
+    "Liquidez Imediata": immediate_liquidity
+})
+
+figure12 = go.Figure()
+
+figure12.add_trace(go.Scatter(
+    x = liquidity_ratios["Trimestre"], y = liquidity_ratios["Liquidez Corrente"],
+    mode = "lines+markers", name = "Liquidez Corrente",
+    line = dict(width = 2, color = "#636efa"), marker = dict(size = 8)
+))
+
+figure12.add_trace(go.Scatter(
+    x = liquidity_ratios["Trimestre"], y = liquidity_ratios["Liquidez Seca"],
+    mode = "lines+markers", name = "Liquidez Seca",
+    line = dict(width = 2, color = "#ef553b"), marker = dict(size = 8)
+))
+
+figure12.add_trace(go.Scatter(
+    x = liquidity_ratios["Trimestre"], y = liquidity_ratios["Liquidez Imediata"],
+    mode = "lines+markers", name = "Liquidez Imediata",
+    line = dict(width = 2, color = "#00cc96"), marker = dict(size = 8)
+))
+
+figure12.update_layout(
+    title = "Fluxo de Caixa e Estoque — Indicadores de Liquidez",
+    title_font_size = 18,
+    font = dict(size = 14, family = "Arial", color = "black"),
+    plot_bgcolor = "white",
+    paper_bgcolor = "white",
+    legend = dict(title = "", font_size = 12, bgcolor = "rgba(0,0,0,0)"),
+    xaxis = dict(
+        title = "Período",
+        showgrid = True,
+        gridcolor = "lightgrey",
+        zeroline = False,
+        title_font_size = 14
+    ),
+    yaxis = dict(
+        title = "Índice de Liquidez",
+        showgrid = True,
+        gridcolor = "lightgrey",
+        zeroline = False,
+        title_font_size = 14
+    ),
+    width = 1000, height = 500,
+    margin = dict(t = 80, b = 120)
+)
+
+formulas_text = (
+    "Liquidez Corrente = Ativo Circulante ÷ Passivo Circulante<br>"
+    "Liquidez Seca = (Ativo Circulante − Estoque) ÷ Passivo Circulante<br>"
+    "Liquidez Imediata = Caixa e Equivalentes ÷ Passivo Circulante"
+)
+
+figure12.add_annotation(
+    text = formulas_text,
+    xref = "paper", yref = "paper",
+    x = 0, y = -0.35,
+    showarrow = False,
+    font = dict(size = 12, color = "gray", family = "Arial"),
+    align = "left"
+)
+
+# figure12.show()
+
+daily_sales_quantity = database_revenue.groupby(["date", "item"]).size().reset_index(name = "quantity_sold")
+daily_sales_quantity["date"] = pd.to_datetime(daily_sales_quantity["date"])
+
+database_expense["date"] = pd.to_datetime(database_expense["date"])
+daily_purchases = database_expense.groupby(["date", "material"]).agg({
+    "quantity_purchased": "sum",
+    "subtotal": "sum"
+}).reset_index()
+
+start_date = min(daily_sales_quantity["date"].min(), daily_purchases["date"].min())
+end_date = max(daily_sales_quantity["date"].max(), daily_purchases["date"].max())
+complete_date_range = pd.date_range(start = start_date, end = end_date, freq = "D")
+
+sales_items = daily_sales_quantity["item"].unique()
+purchase_materials = daily_purchases["material"].unique()
+all_items = list(set(sales_items) | set(purchase_materials))
+
+complete_panel = pd.MultiIndex.from_product(
+    [complete_date_range, all_items], 
+    names = ["date", "item"]
+).to_frame(index = False)
+
+complete_inventory_data = pd.merge(
+    complete_panel, 
+    daily_sales_quantity, 
+    on = ["date", "item"], 
+    how = "left"
+)
+
+daily_purchases = daily_purchases.rename(columns = {"material": "item"})
+complete_inventory_data = pd.merge(
+    complete_inventory_data, 
+    daily_purchases[["date", "item", "quantity_purchased"]], 
+    on = ["date", "item"], 
+    how = "left"
+)
+
+complete_inventory_data["quantity_sold"] = complete_inventory_data["quantity_sold"].fillna(0)
+complete_inventory_data["quantity_purchased"] = complete_inventory_data["quantity_purchased"].fillna(0)
+
+complete_inventory_data["daily_net_change"] = (
+    complete_inventory_data["quantity_purchased"] - complete_inventory_data["quantity_sold"]
+)
+
+complete_inventory_data = complete_inventory_data.sort_values(["item", "date"])
+complete_inventory_data["cumulative_inventory_balance"] = (
+    complete_inventory_data.groupby("item")["daily_net_change"].cumsum()
+)
+
+inventory_activity_summary = complete_inventory_data.groupby("item").agg({
+    "quantity_sold": "sum",
+    "quantity_purchased": "sum"
+}).reset_index()
+
+active_items = inventory_activity_summary[
+    (inventory_activity_summary["quantity_sold"] > 0) | 
+    (inventory_activity_summary["quantity_purchased"] > 0)
+]["item"].unique()
+
+filtered_inventory_data = complete_inventory_data[
+    complete_inventory_data["item"].isin(active_items)
+]
+
+figure13 = px.line(
+    filtered_inventory_data, 
+    x = "date", 
+    y = "cumulative_inventory_balance", 
+    color = "item",
+    labels = {
+        "date": "Data", 
+        "cumulative_inventory_balance": "Saldo Acumulado (Unidades)", 
+        "item": "Item"
+    },
+    title = "Fluxo de Caixa e Estoque — Evolução Diária do Estoque por Item", 
+    width = 1000, 
+    height = 500
+)
+
+figure13.update_layout(
+    title_font_size = 18, 
+    font = dict(size = 14, family = "Arial", color = "black"),
+    plot_bgcolor = "white", 
+    paper_bgcolor = "white",
+    legend = dict(
+        title = "", 
+        font_size = 12, 
+        bgcolor = "rgba(0,0,0,0)"
+    ),
+    xaxis = dict(
+        showgrid = True, 
+        gridcolor = "lightgrey", 
+        zeroline = False, 
+        title_font_size = 14, 
+        tickformat = "%d/%m/%Y"
+    ),
+    yaxis = dict(
+        showgrid = True, 
+        gridcolor = "lightgrey", 
+        zeroline = False, 
+        title_font_size = 14
+    )
+)
+
+# figure13.show()
+
+with open("Script em Formatação (24-10-2025 11h07min K).ipynb", "r", encoding = "utf-8") as f:
     nb = nbformat.read(f, as_version = 4)
 
 code = ""
@@ -1043,6 +948,6 @@ for cell in nb.cells:
     if cell.cell_type == "code":
         code += cell.source + "\n\n"
 
-with open("Conector.py", "w", encoding="utf-8") as f:
+with open("Conector.py", "w", encoding = "utf-8") as f:
     f.write(code)
 
