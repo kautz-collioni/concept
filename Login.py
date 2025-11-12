@@ -43,7 +43,13 @@ def login_page():
         st.markdown(
             f"""
             <div style='text-align: center; margin-bottom: 1rem;'>
-                <img src='data:image/png;base64,{image_base64}' style='width: 70%; height: auto; pointer-events: none; user-select: none; -webkit-user-drag: none;' draggable='false'>
+                <img src='data:image/png;base64,{image_base64}' style='width: 70%;
+                                                                        min-width: 300px;
+                                                                        height: auto; 
+                                                                        pointer-events: none; 
+                                                                        user-select: none; 
+                                                                        -webkit-user-drag: none;
+                                                                        'draggable='false'>
             </div>
             """,
             unsafe_allow_html = True

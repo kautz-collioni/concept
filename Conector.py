@@ -8,6 +8,8 @@ import statsmodels.formula.api as smf
 from statsmodels.tsa.seasonal import STL
 from plotly.subplots import make_subplots
 import nbformat
+import requests
+import io
 
 warnings.simplefilter(action = "ignore")
 
@@ -72,6 +74,25 @@ database_balance_accounts = database_balance_accounts[valid_columns]
 database_balance_accounts.rename(columns = column_map, inplace = True)
 
 # database_balance_accounts.head(10)
+
+database_employees = pd.read_excel("data/Cafeteria Fictícia - Planilhas Unificadas.xlsx", sheet_name = "Quadro de Funcionários")
+
+column_map = {
+	"Data": "date",
+    "Funcionário": "employee",
+    "Cargo": "position",
+    "Salário": "wage"
+}
+
+valid_columns = []
+for column_name in database_employees.columns:
+    if column_name in column_map.keys():
+        valid_columns.append(column_name)
+
+database_employees = database_employees[valid_columns]
+database_employees.rename(columns = column_map, inplace = True)
+
+# database_employees.head(10)
 
 sales_summary = database_revenue.groupby(["item", "price"]).size().reset_index(name = "quantity_sold")
 
@@ -145,7 +166,7 @@ figure3 = px.bar(
 for index, row in elasticities.iterrows():
     figure3.add_annotation(
         x = row["item"], y = row["current_elasticity"],
-        text = f"<b>{row["current_elasticity"]:.2f}</b>",
+        text = f"<b>{row["current_elasticity"]:.2f}</b>".replace(".", ","),
         showarrow = False, font = dict(color = "white", size = 12),
         align = "center", bordercolor = "black",
         borderwidth = 1, bgcolor = "black", opacity = 0.8
@@ -158,7 +179,8 @@ figure3.update_layout(
     paper_bgcolor = "white",
     legend = dict(title = "", borderwidth = 0, font_size = 12, bgcolor = "rgba(0,0,0,0)"),
     xaxis = dict(showgrid = True, gridcolor = "lightgrey", zeroline = False, title_font_size = 14),
-    yaxis = dict(showgrid = True, gridcolor = "lightgrey", zeroline = False, title_font_size = 14)
+    yaxis = dict(showgrid = True, gridcolor = "lightgrey", zeroline = False, title_font_size = 14),
+    separators = ",."
 )
 
 # figure3.show()
@@ -262,6 +284,44 @@ figure7.update_layout(
 
 # figure7.show()
 
+database_employees["date"] = pd.to_datetime(database_employees["date"], format = "%d/%m/%Y")
+current_year = database_employees["date"].dt.year.max()
+current_year = database_employees[database_employees["date"].dt.year == current_year]
+
+employee_summary = current_year.groupby("position").agg(
+    employee_count = ("employee", "nunique"),
+    average_wage = ("wage", "mean")
+).reset_index()
+
+figure8 = px.bar(
+    employee_summary,
+    x = "position", y = "employee_count", color = "position",
+    labels = {"position": "Cargo", "employee_count": "Número de Funcionários"},
+    title = "Análise Exploratória — Funcionários por Cargo e Salário Médio", width = 1000, height = 500
+)
+
+for index, row in employee_summary.iterrows():
+    figure8.add_annotation(
+        x = row["position"], y = row["employee_count"],
+        text = f"<b>R$ {row['average_wage']:,.2f}</b>".replace(",", "X").replace(".", ",").replace("X", "."),
+        showarrow = False, font = dict(color = "white", size = 12),
+        align = "center", bordercolor = "black",
+        borderwidth = 1, bgcolor = "black", opacity = 0.8
+    )
+
+figure8.update_layout(
+    title_font_size = 18,
+    font = dict(size = 14, family = "Arial", color = "black"),
+    plot_bgcolor = "white",
+    paper_bgcolor = "white",
+    legend = dict(title = "", borderwidth = 0, font_size = 12, bgcolor = "rgba(0,0,0,0)"),
+    xaxis = dict(showgrid = True, gridcolor = "lightgrey", zeroline = False, title_font_size = 14),
+    yaxis = dict(showgrid = True, gridcolor = "lightgrey", zeroline = False, title_font_size = 14),
+    separators = ",."
+)
+
+# figure8.show()
+
 optimal_prices = []
 gam_results = {}
 
@@ -296,7 +356,7 @@ for item in sales_summary["item"].unique():
         "optimal_quantity_sold": optimal_quantity_sold
     }
 
-figure8 = go.Figure()
+figure9 = go.Figure()
 
 colors = ["#636efa", "#ef553b", "#00cc96", "#ab63fa", "#ffa15a", 
           "#19d3f3", "#ff6692", "#b6e880", "#bcbd22", "#17becf"]
@@ -307,21 +367,21 @@ for index, item in enumerate(sales_summary["item"].unique()):
     color = colors[index % len(colors)]
     visible = (item == sales_summary["item"].unique()[0])
 
-    figure8.add_trace(go.Scatter(
+    figure9.add_trace(go.Scatter(
         x = item_data["price"], y = item_data["quantity_sold"], 
         mode = "markers", name = "Observado",
         marker = dict(size = 8, color = color, opacity = 0.6),
         visible = visible, legendgroup = "observed", showlegend = True
     ))
 
-    figure8.add_trace(go.Scatter(
+    figure9.add_trace(go.Scatter(
         x = result["price_range"], y = result["demand_estimated"],
         mode = "lines", name = "Demanda estimada",
         line = dict(color = color, width = 2),
         visible = visible, legendgroup = "demand", showlegend = True
     ))
 
-    figure8.add_trace(go.Scatter(
+    figure9.add_trace(go.Scatter(
         x = result["price_range"], y = result["revenue_estimated"],
         mode = "lines", name = "Receita",
         line = dict(color = color, dash = "dot", width = 2),
@@ -329,7 +389,7 @@ for index, item in enumerate(sales_summary["item"].unique()):
         legendgroup = "revenue", showlegend = True
     ))
 
-    figure8.add_trace(go.Scatter(
+    figure9.add_trace(go.Scatter(
         x = [result["optimal_price"]], y = [result["optimal_quantity_sold"]],
         mode = "markers+text", text = [f"Ótimo: R$ {result["optimal_price"]:.2f}"],
         textposition = "top center", marker = dict(color = color, size = 10),
@@ -346,7 +406,7 @@ for item in sales_summary["item"].unique():
                   "title": f"Forecasting e Relacionados — Generalized Additive Model (GAM)"}]
     })
 
-figure8.update_layout(
+figure9.update_layout(
     title = f"Forecasting e Relacionados — Generalized Additive Model (GAM)",
     title_font_size = 18, font = dict(size = 14, family = "Arial", color = "black"),
     width = 1000, height = 500, plot_bgcolor = "white", paper_bgcolor = "white",
@@ -364,7 +424,7 @@ figure8.update_layout(
     )]
 )
 
-# figure8.show()
+# figure9.show()
 
 optimal_elasticities = []
 
@@ -401,7 +461,7 @@ for item in sales_summary["item"].unique():
 
 optimal_elasticities = pd.DataFrame(optimal_elasticities)
 
-figure9 = px.bar(
+figure10 = px.bar(
     optimal_elasticities,
     x = "item", y = "optimal_elasticity", color = "item",
     labels = {"item": "Item", "optimal_elasticity": "Nível"},
@@ -409,25 +469,26 @@ figure9 = px.bar(
 )
 
 for index, row in optimal_elasticities.iterrows():
-    figure9.add_annotation(
+    figure10.add_annotation(
         x = row["item"], y = row["optimal_elasticity"],
-        text = f"<b>{row["optimal_elasticity"]:.2f}</b>",
+        text = f"<b>{row["optimal_elasticity"]:.2f}</b>".replace(".", ","),
         showarrow = False, font = dict(color = "white", size = 12),
         align = "center", bordercolor = "black",
         borderwidth = 1, bgcolor = "black", opacity = 0.8
     )
 
-figure9.update_layout(
+figure10.update_layout(
     title_font_size = 18,
     font = dict(size = 14, family = "Arial", color = "black"),
     plot_bgcolor = "white",
     paper_bgcolor = "white",
     legend = dict(title = "", borderwidth = 0, font_size = 12, bgcolor = "rgba(0,0,0,0)"),
     xaxis = dict(showgrid = True, gridcolor = "lightgrey", zeroline = False, title_font_size = 14),
-    yaxis = dict(showgrid = True, gridcolor = "lightgrey", zeroline = False, title_font_size = 14)
+    yaxis = dict(showgrid = True, gridcolor = "lightgrey", zeroline = False, title_font_size = 14),
+    separators = ",."
 )
 
-# figure9.show()
+# figure10.show()
 
 daily_revenue = (database_revenue.groupby(["date", "item"])["price"]
                  .sum().reset_index(name = "daily_revenue"))
@@ -461,7 +522,7 @@ for index, item in enumerate(items_list):
 
 decomposition_data = pd.concat(decomposition_frames, ignore_index = True)
 
-figure10 = make_subplots(
+figure11 = make_subplots(
     rows = 3, cols = 1, shared_xaxes = True, vertical_spacing = 0.08,
     subplot_titles = ("Tendência", "Sazonalidade", "Resíduo")
 )
@@ -474,7 +535,7 @@ for index, item in enumerate(items_list):
 
     is_visible = (index == 0)
 
-    figure10.add_trace(
+    figure11.add_trace(
         go.Scatter(
             x = slice["date"], y = slice["trend"],
             mode = "lines", name = "Tendência",
@@ -486,11 +547,11 @@ for index, item in enumerate(items_list):
     )
     trace_visibility.append(is_visible)
 
-    figure10.add_trace(
+    figure11.add_trace(
         go.Scatter(
             x = slice["date"], y = slice["seasonal"],
             mode = "lines", name = "Sazonalidade",
-            line = dict(width = 2, color = color),
+            line = dict(width = 2.75, color = color),
             visible = is_visible,
             showlegend = True
         ),
@@ -498,7 +559,7 @@ for index, item in enumerate(items_list):
     )
     trace_visibility.append(is_visible)
 
-    figure10.add_trace(
+    figure11.add_trace(
         go.Scatter(
             x = slice["date"], y = slice["residual"],
             mode = "lines", name = "Resíduo",
@@ -529,7 +590,7 @@ for index, item in enumerate(items_list):
         ]
     ))
 
-figure10.update_layout(
+figure11.update_layout(
     title = f"Forecasting e Relacionados — Tendência, Sazonalidade e Resíduo",
     title_font_size = 18,
     font = dict(size = 14, family = "Arial", color = "black"),
@@ -542,25 +603,25 @@ figure10.update_layout(
     )]
 )
 
-figure10.update_xaxes(
+figure11.update_xaxes(
     showgrid = True, gridcolor = "lightgrey", zeroline = False, title_font_size = 14,
     tickformat = "%d/%m/%Y", row = 3, col = 1, title_text = "Data"
 )
-figure10.update_xaxes(
+figure11.update_xaxes(
     showgrid = True, gridcolor = "lightgrey", zeroline = False, tickformat = "%d/%m/%Y", row = 1, col = 1
 )
-figure10.update_xaxes(
+figure11.update_xaxes(
     showgrid = True, gridcolor = "lightgrey", zeroline = False, tickformat = "%d/%m/%Y", row = 2, col = 1
 )
 
-figure10.update_yaxes(title_text = "Nível", showgrid = True, gridcolor = "lightgrey",
+figure11.update_yaxes(title_text = "Nível", showgrid = True, gridcolor = "lightgrey",
                      zeroline = False, title_font_size = 14, row = 1, col = 1)
-figure10.update_yaxes(title_text = "Nível", showgrid = True, gridcolor = "lightgrey",
+figure11.update_yaxes(title_text = "Nível", showgrid = True, gridcolor = "lightgrey",
                      zeroline = False, title_font_size = 14, row = 2, col = 1)
-figure10.update_yaxes(title_text = "Nível", showgrid = True, gridcolor = "lightgrey",
+figure11.update_yaxes(title_text = "Nível", showgrid = True, gridcolor = "lightgrey",
                      zeroline = False, title_font_size = 14, row = 3, col = 1)
 
-# figure10.show()
+# figure11.show()
 
 comparison_table = pd.DataFrame(optimal_prices)
 
@@ -586,10 +647,14 @@ comparison_table.columns = [
     "Receita Estimada (R$)"
 ]
 
-# comparison_table.to_csv("Entregável - Tabela de Comparação.csv", sep = ";", decimal = ",", index = False, encoding = "utf-8-sig")
+for column in comparison_table.columns:
+    if comparison_table[column].dtype in ["float64", "int64"]:
+        comparison_table[column] = comparison_table[column].apply(lambda x: f"{x:.2f}".replace(".", ","))
 
-# revision = pd.read_csv("Entregável - Tabela de Comparação.csv", sep = ";", decimal = ",")
-# revision.sample(5)
+comparison_table.to_excel("Entregável - Tabela de Comparação.xlsx", index = False)
+
+revision = pd.read_excel("Entregável - Tabela de Comparação.xlsx")
+revision.head(5).style.hide(axis = "index")
 
 database_revenue["date"] = pd.to_datetime(database_revenue["date"])
 database_expense["date"] = pd.to_datetime(database_expense["date"])
@@ -614,31 +679,49 @@ cash_flow["net_margin_percentage"].replace([np.inf, -np.inf], 0, inplace = True)
 cash_flow["monthly_revenue"] = cash_flow["monthly_revenue"] / 1000
 cash_flow["monthly_expense"] = cash_flow["monthly_expense"] / 1000
 
-figure11 = go.Figure()
+figure12 = go.Figure()
 
-figure11.add_trace(go.Bar(
+figure12.add_trace(go.Bar(
     x = cash_flow["date"],
     y = cash_flow["monthly_revenue"],
     name = "Entradas",
     marker_color = "#00cc96",
 ))
 
-figure11.add_trace(go.Bar(
+figure12.add_trace(go.Bar(
     x = cash_flow["date"],
     y = -cash_flow["monthly_expense"],
     name = "Saídas",
     marker_color = "#ef553b",
 ))
 
-figure11.add_trace(go.Scatter(
+figure12.add_trace(go.Scatter(
     x = cash_flow["date"],
     y = cash_flow["net_margin_percentage"],
     name = "Margem Líquida",
-    line = dict(color = "#636efa", width = 3, dash = "dot"),
+    line = dict(color = "darkgray", width = 3, dash = "dot"),
     yaxis = "y2"
 ))
 
-figure11.update_layout(
+for index, row in cash_flow.iterrows():
+    figure12.add_annotation(
+        x = row["date"], y = row["monthly_revenue"],
+        text = f"<b>{row['monthly_revenue']:,.2f}</b>".replace(".", ","),
+        showarrow = False, font = dict(color = "white", size = 12),
+        align = "center", bordercolor = "black",
+        borderwidth = 1, bgcolor = "black", opacity = 0.8
+    )
+
+for index, row in cash_flow.iterrows():
+    figure12.add_annotation(
+        x = row["date"], y = -row["monthly_expense"],
+        text = f"<b>{row['monthly_expense']:,.2f}</b>".replace(".", ","),
+        showarrow = False, font = dict(color = "white", size = 12),
+        align = "center", bordercolor = "black",
+        borderwidth = 1, bgcolor = "black", opacity = 0.8
+    )
+
+figure12.update_layout(
     title = "Fluxo de Caixa e Estoque — Movimentações Mensais",
     xaxis_title = "Data",
     yaxis_title = "Movimentação (R$ mil)",
@@ -654,7 +737,7 @@ figure11.update_layout(
     plot_bgcolor = "white",
     paper_bgcolor = "white",
     legend = dict(title = "", font_size = 12, bgcolor = "rgba(0,0,0,0)",
-                  x = 1.1, y = 1, xanchor= "left", yanchor = "top"),
+                  x = 1.1, y = 1, xanchor = "left", yanchor = "top"),
     xaxis = dict(
         showgrid = True, 
         gridcolor = "lightgrey", 
@@ -673,7 +756,7 @@ figure11.update_layout(
     width = 1000, height = 500
 )
 
-# figure11.show()
+# figure12.show()
 
 annual_cash_flow = cash_flow.copy()
 annual_cash_flow.set_index('date', inplace=True)
@@ -741,7 +824,7 @@ projected_cash_flow = projected_cash_flow.set_index('Ano')
 projected_cash_flow = projected_cash_flow.T
 projected_cash_flow.index.name = None
 
-print(projected_cash_flow)
+#print(projected_cash_flow)
 
 database_balance_accounts.set_index("heading", inplace = True)
 database_balance_accounts = database_balance_accounts.apply(pd.to_numeric, errors = "coerce")
@@ -773,27 +856,27 @@ liquidity_ratios = pd.DataFrame({
     "Liquidez Imediata": immediate_liquidity
 })
 
-figure12 = go.Figure()
+figure13 = go.Figure()
 
-figure12.add_trace(go.Scatter(
+figure13.add_trace(go.Scatter(
     x = liquidity_ratios["Trimestre"], y = liquidity_ratios["Liquidez Corrente"],
     mode = "lines+markers", name = "Liquidez Corrente",
     line = dict(width = 2, color = "#636efa"), marker = dict(size = 8)
 ))
 
-figure12.add_trace(go.Scatter(
+figure13.add_trace(go.Scatter(
     x = liquidity_ratios["Trimestre"], y = liquidity_ratios["Liquidez Seca"],
     mode = "lines+markers", name = "Liquidez Seca",
     line = dict(width = 2, color = "#ef553b"), marker = dict(size = 8)
 ))
 
-figure12.add_trace(go.Scatter(
+figure13.add_trace(go.Scatter(
     x = liquidity_ratios["Trimestre"], y = liquidity_ratios["Liquidez Imediata"],
     mode = "lines+markers", name = "Liquidez Imediata",
     line = dict(width = 2, color = "#00cc96"), marker = dict(size = 8)
 ))
 
-figure12.update_layout(
+figure13.update_layout(
     title = "Fluxo de Caixa e Estoque — Indicadores de Liquidez",
     title_font_size = 18,
     font = dict(size = 14, family = "Arial", color = "black"),
@@ -824,7 +907,7 @@ formulas_text = (
     "Liquidez Imediata = Caixa e Equivalentes ÷ Passivo Circulante"
 )
 
-figure12.add_annotation(
+figure13.add_annotation(
     text = formulas_text,
     xref = "paper", yref = "paper",
     x = 0, y = -0.35,
@@ -833,7 +916,7 @@ figure12.add_annotation(
     align = "left"
 )
 
-# figure12.show()
+# figure13.show()
 
 daily_sales_quantity = database_revenue.groupby(["date", "item"]).size().reset_index(name = "quantity_sold")
 daily_sales_quantity["date"] = pd.to_datetime(daily_sales_quantity["date"])
@@ -898,7 +981,7 @@ filtered_inventory_data = complete_inventory_data[
     complete_inventory_data["item"].isin(active_items)
 ]
 
-figure13 = px.line(
+figure14 = px.line(
     filtered_inventory_data, 
     x = "date", 
     y = "cumulative_inventory_balance", 
@@ -913,7 +996,7 @@ figure13 = px.line(
     height = 500
 )
 
-figure13.update_layout(
+figure14.update_layout(
     title_font_size = 18, 
     font = dict(size = 14, family = "Arial", color = "black"),
     plot_bgcolor = "white", 
@@ -938,9 +1021,77 @@ figure13.update_layout(
     )
 )
 
-# figure13.show()
+# figure14.show()
 
-with open("Script em Formatação (24-10-2025 11h07min K).ipynb", "r", encoding = "utf-8") as f:
+def obtain_npv(attractive_rate, cash_flow):
+    return sum(dough / (1 + attractive_rate) ** time for time, dough in enumerate(cash_flow))
+
+def measure_irr(cash_flow, guess = 0.1, tolerance = 1e-5):
+    adjustment_rate, step = guess, 0.01
+
+    for _ in range(1000):
+        temporary_npv = obtain_npv(adjustment_rate, cash_flow)
+        if abs(temporary_npv) < tolerance:
+            return adjustment_rate
+        adjustment_rate += step if temporary_npv > 0 else - step
+        step *= 0.9
+
+    raise ValueError("Mude o palpite!")
+
+def discover_mirr(cash_flow, financing_rate, reinvestment_rate):
+    present_value = sum(dough / (1 + financing_rate) ** time for time, dough in enumerate(cash_flow) if dough < 0)
+    future_value = sum(dough * (1 + reinvestment_rate) ** (len(cash_flow) - time - 1) for time, dough in enumerate(cash_flow) if dough > 0)
+    
+    return (abs(future_value / present_value)) ** (1 / (len(cash_flow) - 1)) - 1
+
+def get_selic_rate():
+    url = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.432/dados/ultimos/1?formato=json"
+    response = requests.get(url)
+    
+    if response.status_code == 200:
+        data = response.json()
+        data = float(data[0]["valor"]) / 100
+        return data
+    else:
+        raise Exception("Falha ao acessar a taxa Selic!")
+
+def get_ipca_12_months():
+    url = "https://api.bcb.gov.br/dados/serie/bcdata.sgs.433/dados/ultimos/12?formato=json"
+    response = requests.get(url)
+
+    if response.status_code == 200:
+        data = response.json()
+        monthly = [float(nibble["valor"]) / 100 for nibble in data]
+        compound = 1
+        for bump in monthly:
+            compound *= (1 + bump)
+        return compound - 1
+    else:
+        raise Exception("Falha ao acessar o Índice Nacional de Preços ao Consumidor Amplo (IPCA)!")
+
+cash_flow = [-1250, 425, 425, 425, 425, -2500, 850, 850, 850, 850]
+attractive_rate = get_selic_rate()
+financing_rate = get_selic_rate() * 1.75
+reinvestment_rate = get_ipca_12_months() + 0.05
+
+#print(f"Valor Presente Líquido (VPL): R$ {round(obtain_npv(attractive_rate, cash_flow), 2)}")
+#print(f"Taxa Interna de Retorno (TIR): {round(measure_irr(cash_flow) * 100, 2)}%")
+#print(f"Taxa Interna de Retorno Modificada (TIRM): {round(discover_mirr(cash_flow, financing_rate, reinvestment_rate) * 100, 2)}%")
+
+def buffer_csv(df):
+    csv_buffer = io.StringIO()
+
+    df.to_csv(
+        csv_buffer,
+        sep=";",
+        decimal=",",
+        index=False,
+        encoding="utf-8-sig"
+    )
+    
+    return csv_buffer.getvalue()
+
+with open("Script.ipynb", "r", encoding = "utf-8") as f:
     nb = nbformat.read(f, as_version = 4)
 
 code = ""

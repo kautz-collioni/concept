@@ -1,9 +1,7 @@
-
-.stSidebar {
+section[data-testid="stSidebar"][aria-expanded="true"] {
     width: 250px !important;
     min-width: 250px !important;
     max-width: 250px !important;
-    resize: none !important;
 }
 
 .user-greeting {
@@ -30,25 +28,6 @@ section[data-testid="stSidebar"] .stButton button {
 section[data-testid="stSidebar"] .stButton button:hover {
     background-color: #e9ecef !important;
     border: 1px solid #ced4da !important;
-}
-
-section[data-testid="stSidebar"] {
-    position: relative;
-    overflow-y: hidden !important;
-    overflow-x: hidden !important;
-    padding-bottom: 0px !important;
-    padding-top: 15px;
-} 
-
-section[data-testid="stSidebar"]::-webkit-scrollbar {
-    display: none;
-}
-
-div[data-testid="stSidebarContent"] {
-    display: flex;
-    flex-direction: column;
-    height: 100%; 
-    padding-bottom: 0px !important;
 }
 
 section[data-testid="stSidebar"] div[data-baseweb="radio"] div:first-child {display: none !important;}

@@ -1,5 +1,8 @@
 import streamlit as st
 import base64
+import streamlit.components.v1 as components
+from streamlit.components.v1 import html
+import time
 import Conector as con
 
 # ========================= 1. PAGE CONFIGURATION AND STYLE LOADING =========================
@@ -40,25 +43,80 @@ def back_to_login():
 # ======================== 4. MAIN APPLICATION ========================
 
 def main_app():
-    # Sidebar page Config
-    st.set_page_config(initial_sidebar_state="expanded")
     # Load main application CSS
     load_css("styles/common_style.css")
     load_css("styles/sidebar_style.css")
 
-    # Main application title
-    st.markdown("""
-        <style>
-        .app-title {
-            text-align: center;
-            font-size: 46px;
-            font-weight: 700;
-            color: #30333e;
-            margin-bottom: 1rem;
+
+    print_button = """
+    <style>
+    button.print-button {
+        padding: 10px 15px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        background-color: transparent;
+        color: #212529;
+        border: none;
+        border-radius: 0.25rem;
+        font-family: Source Sans Pro, sans-serif;
+        text-decoration: none;
+        transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        outline: none;
+    }
+
+    button.print-button:hover {
+        background-color: #e9ecef;
+        border-color: #ced4da;
+    }
+
+    button.print-button:active {
+        background-color: #a6a5a5;
+        border-color: #ced4da; /* Ajusta a cor da borda */
+        color: #212529;
+        box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+    }
+
+    @media print {
+        .print-button {
+            display: none !important;
         }
-        </style>
-        <div class="app-title">Porsche Brasil</div>
-    """, unsafe_allow_html = True)
+
+        .graph-container {
+            page-break-inside: avoid;
+            break-inside: avoid-page;
+        }
+    }
+    </style>
+
+    <script>
+        function printReport() {
+            const expandedSidebar = window.parent.document.querySelector('section[data-testid="stSidebar"][aria-expanded="true"]');
+
+            const sidebarToggle = window.parent.document.querySelector('div[data-testid="stSidebarCollapseButton"] > button');
+
+            if (expandedSidebar && sidebarToggle) {
+                sidebarToggle.closest('button').click();
+            }
+
+            setTimeout(() => {
+                top.window.print();
+            }, 500);
+        }
+    </script>
+
+    <button 
+        onclick="printReport();" 
+        class="print-button"
+    >
+        Imprimir
+    </button>
+    """
+    components.html(print_button, height=80)
+
+    # Main application title
+    st.markdown("""<div class="app-title">Porsche Brasil</div>""", unsafe_allow_html = True)
+
     st.markdown("---")
 
     with st.sidebar:
@@ -100,7 +158,7 @@ def main_app():
         if section != st.session_state.current_section:
             st.session_state.current_section = section
             st.rerun()
-        
+       
         # Exit button - Logout
         st.button("Sair", key="logout_btn", on_click=back_to_login, use_container_width=True)
 
@@ -117,66 +175,106 @@ def main_app():
     # Section: Introdução
     if st.session_state.current_section == "Introdução":
         st.header("Amostra dos Dados")
+        st.markdown('<div class="graph-container">', unsafe_allow_html=True)
         st.markdown("Qual é a fundamentação do estudo?")
         st.dataframe(database.sample(25))
+        st.markdown('</div>', unsafe_allow_html=True)
 
     # Section: Análise Exploratória
     elif st.session_state.current_section == "Análise Exploratória":
         st.header("Análise Exploratória")
+        st.markdown('<div class="graph-container">', unsafe_allow_html=True)
         st.subheader("Relação entre Quantidade Vendida e Preço por Item de Café (Demandas inversas)")
         st.plotly_chart(con.figure1, use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown('<div class="graph-container">', unsafe_allow_html=True)
         st.subheader("Distribuições de Preços")
         st.plotly_chart(con.figure2, use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown('<div class="graph-container">', unsafe_allow_html=True)
         st.subheader("Análise Exploratória — Receitas Acumuladas")
         st.plotly_chart(con.figure4, use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown('<div class="graph-container">', unsafe_allow_html=True)
         st.subheader("Análise Exploratória — Receitas Diárias")
         st.plotly_chart(con.figure5, use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown('<div class="graph-container">', unsafe_allow_html=True)
         st.subheader("Análise Exploratória — Receita por Dia da Semana")
         st.plotly_chart(con.figure6, use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown('<div class="graph-container">', unsafe_allow_html=True)
         st.subheader("Análise Exploratória — Participação na Receita (Semanal)")
         st.plotly_chart(con.figure7, use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
 
     # Section: Elasticidades
     elif st.session_state.current_section == "Elasticidades":
         st.header("Elasticidades")
+        st.markdown('<div class="graph-container">', unsafe_allow_html=True)
         st.subheader("Elasticidades-preço da Demanda Atuais")
         st.plotly_chart(con.figure3, use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown('<div class="graph-container">', unsafe_allow_html=True)
         st.subheader("Elasticidades-preço nos Pontos Ótimos")
         st.plotly_chart(con.figure9, use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
 
     # Section: Forecasting
     elif st.session_state.current_section == "Forecasting":
         st.header("Forecasting e Relacionados")
+        st.markdown('<div class="graph-container">', unsafe_allow_html=True)
         st.subheader("Otimização de Preços Usando Modelos Aditivos Generalizados (GAM)")
         st.plotly_chart(con.figure8, use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
 
     # Section: Gerencial
     elif st.session_state.current_section == "Gerencial":
         st.subheader("Fluxo de caixa")
+        st.markdown('<div class="graph-container">', unsafe_allow_html=True)
         st.text("Esse é o fluxo dos últimos x períodos.")
         st.plotly_chart(con.figure11, use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
         st.markdown("---")
         st.subheader("Liquidez")
+        st.markdown('<div class="graph-container">', unsafe_allow_html=True)
         st.text("Aqui mostra a capacidade de liquidar as suas dívidas(passivos).")
         st.plotly_chart(con.figure12, use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
         st.markdown("---")
+        st.markdown('<div class="graph-container">', unsafe_allow_html=True)
         st.subheader("Fluxo de Caixa Projetado")
         st.text("Projeção do resultado da empresa pelos próximos x períodos")
         st.table(con.projected_cash_flow)
+        st.markdown('</div>', unsafe_allow_html=True)
         st.markdown("---")
+        st.markdown('<div class="graph-container">', unsafe_allow_html=True)
         st.subheader("Controle Gerencial de Estoques por Produto")
         st.plotly_chart(con.figure13, use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
 
     # Section: Decomposição
     elif st.session_state.current_section == "Decomposição":
         st.header("Decomposição de Séries")
+        st.markdown('<div class="graph-container">', unsafe_allow_html=True)
         st.subheader("Decomposição: Tendência, Sazonalidade e Resíduo")
         st.plotly_chart(con.figure10, use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
 
     # Section: Entregáveis
     elif st.session_state.current_section == "Entregáveis":
         st.header("Entregáveis")
+        st.markdown('<div class="graph-container">', unsafe_allow_html=True)
         st.dataframe(con.comparison_table)
+        st.markdown('</div>', unsafe_allow_html=True)
+        col1, col2 = st.columns([8,1])
+        with col2:
+            st.download_button(
+                label="Baixar",
+                data=con.buffer_csv(con.comparison_table),
+                file_name="Projeções.csv",
+                mime="text/csv",
+                )
 
     # Section: Contato
     elif st.session_state.current_section == "Contato":
@@ -210,7 +308,7 @@ def main_app():
                     }
 
                     .social-text {
-                        font-size: 1rem;
+                        font-size: 0.8rem;
                         margin-left: 0.5rem;
                     }
 
@@ -227,7 +325,7 @@ def main_app():
             st.image("media/avatar1.jpeg", use_container_width=True)          
             st.markdown("Sócio / Diretor &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Economista")
             
-            icon_col1, icon_col2, icon_col3 = st.columns(3)
+            icon_col1, icon_col2, icon_col3, icon_col4 = st.columns(4)
             
             with icon_col1:
                 st.markdown("""
@@ -246,31 +344,35 @@ def main_app():
                             <a class="social-icon" href="https://www.linkedin.com/in/bernardo-kautz" target="_blank">
                                 <i class="fa-brands fa-linkedin"></i>
                             <span class="social-text"> LinkedIn </span> </a>""", unsafe_allow_html=True)
+            with icon_col4:
+                st.markdown(" ")
 
         with col2:
             st.markdown("#### Gustavo Collioni")
             st.image("media/avatar2.jpg", use_container_width=True)
             st.markdown("Sócio / Diretor &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Economista")
 
-            icon_col4, icon_col5, icon_col6 = st.columns(3)
+            icon_col5, icon_col6, icon_col7, icon_col8 = st.columns(4)
 
-            with icon_col4:
+            with icon_col5:
                 st.markdown("""
                             <a class="social-icon" href="https://wa.me/5551982765730" target="_blank">
                                 <i class="fa-brands fa-whatsapp"></i>
                             <span class="social-text"> WhatsApp </span></a>""", unsafe_allow_html=True)
                 
-            with icon_col5:
+            with icon_col6:
                 st.markdown(f"""
                             <a class="social-icon" href="mailto:gustavo@kautz-collioni.com.br">
                                 <i class="fa-solid fa-at"></i>
                             <span class="social-text"> Email </span> </a>""", unsafe_allow_html=True)
                 
-            with icon_col6:
+            with icon_col7:
                 st.markdown("""
                             <a class="social-icon" href="https://www.linkedin.com/in/gustavo-collioni" target="_blank">
                                 <i class="fa-brands fa-linkedin"></i>
                             <span class="social-text"> LinkedIn </span> </a>""", unsafe_allow_html=True)
+            with icon_col8:
+                st.markdown(" ")
 
     st.markdown("---")
    
