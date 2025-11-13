@@ -35,6 +35,35 @@ def login_page():
     load_css("styles/common_style.css")
     load_css("styles/login_style.css")
 
+    # Background loading
+    
+    with open("media/background_login_page.jpg", "rb") as f:
+            image_base64 = base64.b64encode(f.read()).decode()
+    
+    page_background = f"""
+        <style>
+        [data-testid="stAppViewContainer"] {{
+            background-image: url("data:image/jpg;base64,{image_base64}");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            }}
+        [data-testid="stHeader"] {{
+            background: rgba(0, 0, 0, 0);
+            }}
+
+        [data-testid="stAppViewContainer"]::before {{
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.75);
+            z-index: 0;
+        }}
+        </style>
+    """
+
+    st.markdown(page_background, unsafe_allow_html = True)
+
     # Logo loading
     try:
         with open("media/Cabeçalho Escuro - Streamlit.png", "rb") as f:
@@ -78,7 +107,7 @@ def login_page():
 
     st.markdown(
         """
-        <div style="width:100%; text-align:center; font-size:12px; color:#999999;">
+        <div style="width:100%; text-align:center; font-size:12px; color:#404040;">
         Todos os direitos reservados © 2025 | Kautz-Collioni & Cia.
         </div>
         """,

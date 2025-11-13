@@ -99,8 +99,21 @@ def main_app():
                 sidebarToggle.closest('button').click();
             }
 
+            const body = window.parent.document.body;
+
+            const selection = window.parent.getSelection();
+
+            const range = document.createRange();
+
+            range.selectNodeContents(body);
+
+            selection.removeAllRanges();
+
+            selection.addRange(range);
+            
             setTimeout(() => {
                 top.window.print();
+                selection.removeAllRanges();
             }, 500);
         }
     </script>
@@ -380,9 +393,7 @@ def main_app():
     st.markdown(
         """
         <div style="width:100%; text-align:center; font-size:12px; color:#999999; margin-top:1rem; padding:1rem 0;">
-        Elaboração realizada por Kautz-Collioni & Cia. Replicação desautorizada sem pedido prévio. | 
-        E-mail: suporte@kautz.collioni_cia.com.br. |
-        Telefone: (51) 9 8276-5730.
+        E-mail: suporte@kautz.collioni_cia.com.br. | Telefone: (51) 9 9678-1573.
         </div>
         """,
         unsafe_allow_html=True
