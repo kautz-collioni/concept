@@ -90,49 +90,6 @@ def main_app():
     </style>
 
     <script>
-        const PRINT_STYLE_ID = 'streamlit-print-fix-styles';
-        const STREAMLIT_TARGET_ID = 'stAppViewContainer';
-        const API_KEY = "";
-
-        function injectPrintStyles() {
-            const parentHead = window.parent.document.head;
-
-            if (window.parent.document.getElementById(PRINT_STYLE_ID)) {
-                return;
-            }
-
-            const style = window.parent.document.createElement('style');
-            style.id = PRINT_STYLE_ID;
-            style.textContent = `
-                @media print {
-                    [data-testid="stSidebar"],            
-                    [data-testid="stHeader"],             
-                    [data-testid="stToolbar"],            
-                    [data-testid="stDecoration"],         
-                    .st-toast,                            
-                    .print-button-container,              
-                    .st-emotion-cache-1g836t {            
-                        display: none !important;
-                    }
-
-                    [data-testid="${STREAMLIT_TARGET_ID}"] > div:first-child,
-                    [data-testid="stApp"],
-                    body {
-                        overflow: visible !important;
-                        height: auto !important;
-                        min-height: auto !important;
-                        max-width: none !important;
-                    }
-
-                    .st-emotion-cache-1v0440 {
-                        page-break-inside: avoid;
-                        break-inside: avoid-page;
-                    }
-                }
-            `;
-            parentHead.appendChild(style);
-        }
-
         function printReport() {
             const expandedSidebar = window.parent.document.querySelector('section[data-testid="stSidebar"][aria-expanded="true"]');
 
@@ -141,22 +98,9 @@ def main_app():
             if (expandedSidebar && sidebarToggle) {
                 sidebarToggle.closest('button').click();
             }
-
-            const body = window.parent.document.body;
-
-            const selection = window.parent.getSelection();
-
-            const range = document.createRange();
-
-            range.selectNodeContents(body);
-
-            selection.removeAllRanges();
-
-            selection.addRange(range);
             
             setTimeout(() => {
                 top.window.print();
-                selection.removeAllRanges();
             }, 500);
         }
     </script>
