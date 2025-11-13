@@ -112,7 +112,7 @@ def main_app():
             selection.addRange(range);
             
             setTimeout(() => {
-                top.window.print();
+                window.print();
                 selection.removeAllRanges();
             }, 500);
         }
