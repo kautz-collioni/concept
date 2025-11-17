@@ -651,7 +651,7 @@ comparison_table.columns = [
 
 for column in comparison_table.columns:
     if comparison_table[column].dtype in ["float64", "int64"]:
-        comparison_table[column] = comparison_table[column].apply(lambda x: f"{x:.2f}".replace(".", ","))
+        comparison_table[column] = comparison_table[column].apply(lambda x: f"{x:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
 
 comparison_table.to_excel("Entregável - Tabela de Comparação.xlsx", index = False)
 

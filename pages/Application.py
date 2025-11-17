@@ -177,7 +177,10 @@ def main_app():
         st.header("Amostra dos Dados")
         st.markdown('<div class="graph-container">', unsafe_allow_html=True)
         st.markdown("Qual é a fundamentação do estudo?")
-        st.dataframe(database.sample(25))
+        st.dataframe(database.sample(25).style.format({
+                                                "date": "{:%d/%m/%Y}",
+                                                "price": "{:,.2f}"}, thousands=".", decimal=","),
+                                                hide_index=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
     # Section: Análise Exploratória
@@ -265,7 +268,7 @@ def main_app():
     elif st.session_state.current_section == "Entregáveis":
         st.header("Entregáveis")
         st.markdown('<div class="graph-container">', unsafe_allow_html=True)
-        st.dataframe(con.comparison_table)
+        st.dataframe(con.comparison_table, hide_index=True, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
         col1, col2 = st.columns([8,1])
         with col2:
