@@ -10,6 +10,8 @@ from plotly.subplots import make_subplots
 import nbformat
 import requests
 import io
+from openpyxl import load_workbook
+from openpyxl.styles import Font, Alignment, NamedStyle, Border, Side
 
 warnings.simplefilter(action = "ignore")
 
@@ -1079,17 +1081,66 @@ def get_ipca_12_months():
 # print(f"Taxa Interna de Retorno Modificada (TIRM): {round(discover_mirr(cash_flow, financing_rate, reinvestment_rate) * 100, 2)}%")
 
 def buffer_csv(df):
-    csv_buffer = io.StringIO()
+	csv_buffer = io.StringIO()
 
-    df.to_csv(
-        csv_buffer,
-        sep=";",
-        decimal=",",
-        index=False,
-        encoding="utf-8-sig"
-    )
-    
-    return csv_buffer.getvalue()
+	df.to_csv(
+		csv_buffer,
+		sep=";",
+		decimal=",",
+		index=False,
+		encoding="utf-8-sig"
+	)
+
+	return csv_buffer.getvalue()
+
+
+def buffer_excel_formatted(df: pd.DataFrame) -> bytes:
+	excel_buffer = io.BytesIO()
+
+	with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
+		df.to_excel(writer, index=False, sheet_name="Planilha")
+
+	excel_buffer.seek(0)
+
+	workbook = load_workbook(excel_buffer)
+	worksheet = workbook.active
+
+	worksheet.title = "Planilha"
+	worksheet.sheet_view.showGridLines = False
+
+	header_font = Font(bold=True)
+
+	accounting_style = NamedStyle(name="AccountingStyle")
+	accounting_style.number_format = "#,##0.00"
+	accounting_style.alignment = Alignment(horizontal="right", vertical="center")
+
+	border_none = Border(
+		left=Side(style=None),
+		right=Side(style=None),
+		top=Side(style=None),
+		bottom=Side(style=None),
+	)
+
+	for cell in worksheet[1]:
+		cell.font = header_font
+		cell.border = border_none
+		cell.alignment = Alignment(horizontal="center", vertical="center")
+
+	for row in worksheet.iter_rows(min_row=2):
+		for cell in row:
+			cell.style = accounting_style
+			cell.border = border_none
+
+	for column in worksheet.columns:
+		max_length = max(len(str(cell.value)) if cell.value is not None else 0 for cell in column)
+		adjusted_width = (max_length + 2)
+		worksheet.column_dimensions[column[0].column_letter].width = adjusted_width
+
+	excel_buffer.seek(0)
+	excel_buffer.truncate()
+	workbook.save(excel_buffer)
+
+	return excel_buffer.getvalue()
 
 with open("Script.ipynb", "r", encoding = "utf-8") as f:
     nb = nbformat.read(f, as_version = 4)

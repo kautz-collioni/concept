@@ -33,7 +33,7 @@ if 'current_section' not in st.session_state:
 # ======================== 3. LOGOUT FUNCTION ========================
 
 def back_to_login():
-    keys_to_preserve = ['logged_in', 'current_section']  # Não preserve nenhum estado ao sair
+    keys_to_preserve = ['logged_in', 'current_section']
     keys_to_delete = [key for key in st.session_state.keys() if key not in keys_to_preserve]
     for key in keys_to_delete:
         del st.session_state[key]
@@ -126,7 +126,7 @@ def main_app():
                 image_base64 = base64.b64encode(f.read()).decode()
             st.markdown(
                 f"""
-                <div class="logo-container" style='text-align: center; margin-bottom: -15rem; z-index: 1; margin-top: -1rem;'>
+                <div class="logo-container" style='text-align: center; margin-bottom: -15rem; z-index: 1; margin-top: -4rem;'>
                     <img src='data:image/svg+xml;base64,{image_base64}' style='width: 100%; height: 60%; pointer-events: none; user-select: none; -webkit-user-drag: none;' draggable='false; margin-bottom: -15rem; top: -4rem; position: relative; padding-bottom: 0rem; z-index: 1;'>
                 </div>
                 """,
@@ -271,8 +271,8 @@ def main_app():
         with col2:
             st.download_button(
                 label="Baixar",
-                data=con.buffer_csv(con.comparison_table),
-                file_name="Projeções.csv",
+                data=con.buffer_excel_formatted(con.comparison_table),
+                file_name="Projeções.xlsx",
                 mime="text/csv",
                 )
 
@@ -322,7 +322,7 @@ def main_app():
 
         with col1:
             st.markdown("#### Bernardo Kautz")
-            st.image("media/avatar1.jpeg", use_container_width=True)          
+            st.image("media/bernardo.png", use_container_width=True)          
             st.markdown("Sócio / Diretor &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Economista")
             
             icon_col1, icon_col2, icon_col3, icon_col4 = st.columns(4)
@@ -349,7 +349,7 @@ def main_app():
 
         with col2:
             st.markdown("#### Gustavo Collioni")
-            st.image("media/avatar2.jpg", use_container_width=True)
+            st.image("media/gustavo.jpg", use_container_width=True)
             st.markdown("Sócio / Diretor &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Economista")
 
             icon_col5, icon_col6, icon_col7, icon_col8 = st.columns(4)
@@ -380,7 +380,7 @@ def main_app():
     st.markdown(
         """
         <div style="width:100%; text-align:center; font-size:12px; color:#999999; margin-top:1rem; padding:1rem 0;">
-        E-mail: suporte@kautz.collioni_cia.com.br. | Telefone: (51) 9 9678-1573.
+        E-mail: suporte@kautz.collioni_cia.com.br. | Telefone: (54) 9 9678-1573.
         </div>
         """,
         unsafe_allow_html=True
