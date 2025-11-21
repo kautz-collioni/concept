@@ -71,3 +71,7 @@ div[data-testid="stDownloadButton"] > button:active {
 .stToolbarActions {
     display: none !important;
 }
+
+.manage-app-button {
+    display: none !important;
+}
