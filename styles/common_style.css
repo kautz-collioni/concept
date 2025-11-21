@@ -68,18 +68,6 @@ div[data-testid="stDownloadButton"] > button:active {
     background-color: #a6a5a5 !important; 
 }
 
-button[data-testid="stShareButton"] {
-    display: none !important;
-}
-
-button[data-testid="stFavoriteButton"] {
-    display: none !important;
-}
-
-[data-testid="stEditThisApp"] {
-    display: none !important;
-}
-
-div[data-testid="stHeaderAction"] a[target="_blank"][href*="github"] {
+.stToolbarActions {
     display: none !important;
 }
