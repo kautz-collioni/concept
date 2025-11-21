@@ -174,7 +174,6 @@ def main_app():
 
     # Section: Introdução
     if st.session_state.current_section == "Introdução":
-        st.header("Amostra dos Dados")
         st.markdown('<div class="graph-container">', unsafe_allow_html=True)
         st.markdown("Qual é a fundamentação do estudo?")
         st.dataframe(database.sample(25).style.format({
@@ -185,7 +184,6 @@ def main_app():
 
     # Section: Análise Exploratória
     elif st.session_state.current_section == "Análise Exploratória":
-        st.header("Análise Exploratória")
         st.markdown('<div class="graph-container">', unsafe_allow_html=True)
         st.subheader("Relação entre Quantidade Vendida e Preço por Item de Café (Demandas inversas)")
         st.plotly_chart(con.figure1, use_container_width=True)
@@ -213,7 +211,6 @@ def main_app():
 
     # Section: Elasticidades
     elif st.session_state.current_section == "Elasticidades":
-        st.header("Elasticidades")
         st.markdown('<div class="graph-container">', unsafe_allow_html=True)
         st.subheader("Elasticidades-preço da Demanda Atuais")
         st.plotly_chart(con.figure3, use_container_width=True)
@@ -225,7 +222,6 @@ def main_app():
 
     # Section: Forecasting
     elif st.session_state.current_section == "Forecasting":
-        st.header("Forecasting e Relacionados")
         st.markdown('<div class="graph-container">', unsafe_allow_html=True)
         st.subheader("Otimização de Preços Usando Modelos Aditivos Generalizados (GAM)")
         st.plotly_chart(con.figure8, use_container_width=True)
@@ -258,7 +254,6 @@ def main_app():
 
     # Section: Decomposição
     elif st.session_state.current_section == "Decomposição":
-        st.header("Decomposição de Séries")
         st.markdown('<div class="graph-container">', unsafe_allow_html=True)
         st.subheader("Decomposição: Tendência, Sazonalidade e Resíduo")
         st.plotly_chart(con.figure10, use_container_width=True)
@@ -266,7 +261,6 @@ def main_app():
 
     # Section: Entregáveis
     elif st.session_state.current_section == "Entregáveis":
-        st.header("Entregáveis")
         st.markdown('<div class="graph-container">', unsafe_allow_html=True)
         st.dataframe(con.comparison_table, hide_index=True, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
