@@ -1,3 +1,4 @@
 [theme]
 base="light"
 headless = true
+toolbarMode = "viewer"
