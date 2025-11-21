@@ -37,10 +37,6 @@
     display: none;
 }
 
-#MainMenu {
-    visibility: hidden;
-}
-
 div.st-key-download_btn button[data-testid="stBaseButton-secondary"] {
     width: 20% !important;
 }
