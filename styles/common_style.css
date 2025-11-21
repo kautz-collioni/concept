@@ -72,6 +72,6 @@ div[data-testid="stDownloadButton"] > button:active {
     display: none !important;
 }
 
-.manage-app-button {
+button[data-testid="manage-app-button"] {
     display: none !important;
 }
