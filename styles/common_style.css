@@ -75,3 +75,7 @@ div[data-testid="stDownloadButton"] > button:active {
 button[data-testid="manage-app-button"] {
     display: none !important;
 }
+
+div[class="_profileContainer_gzau3_53"] {
+    display: none !important;
+}
