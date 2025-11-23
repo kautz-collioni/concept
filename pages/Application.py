@@ -14,19 +14,8 @@ st.set_page_config(
 
 hide_st_style = '''
 <style>
-    footer {
-        
+    div[class^="_hostedName"] {
         visibility: hidden;
-        
-        }
-    footer:after {
-        content:'goodbye'; 
-        visibility: visible;
-        display: block;
-        position: relative;
-        #background-color: red;
-        padding: 5px;
-        top: 2px;
     }
 </style>
 '''
