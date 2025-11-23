@@ -14,15 +14,20 @@ st.set_page_config(
 
 hide_st_style = '''
 <style>
-div[class*="profileContainer"] {
-    display: none !important;
-    visibility: hidden;
-}
-
-div[class*="profilePreview"] {
-    display: none !important;
-    visibility: hidden;
-}
+    footer {
+        
+        visibility: hidden;
+        
+        }
+    footer:after {
+        content:'goodbye'; 
+        visibility: visible;
+        display: block;
+        position: relative;
+        #background-color: red;
+        padding: 5px;
+        top: 2px;
+    }
 </style>
 '''
 st.markdown(hide_st_style, unsafe_allow_html=True)
