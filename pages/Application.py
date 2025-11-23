@@ -12,6 +12,15 @@ st.set_page_config(
     initial_sidebar_state = "expanded",
 )
 
+hide_st_style = '''
+
+#MainMenu {visibility: hidden;}
+footer {visibility: hidden;}
+header {visibility: hidden;}
+
+'''
+st.markdown(hide_st_style, unsafe_allow_html=True)
+
 def load_css(file_name):
     try:
         with open(file_name, encoding = 'utf-8') as f:
