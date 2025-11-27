@@ -76,12 +76,6 @@ button[data-testid="manage-app-button"] {
     display: none !important;
 }
 
-footer {visibility: hidden;}
-
-.st-emotion-cache-nahz7x {
-    display: none !important;
-}
-
-a[href="https://streamlit.io/cloud"] {
-    display: none !important;
+div[data-testid="stText"] > div {
+    font-size: 13px !important;
 }
