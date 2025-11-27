@@ -328,7 +328,7 @@ def main_app():
 
         with col1:
             st.markdown("#### Bernardo Kautz")
-            st.image("media/BernardoKautz.png", use_container_width=True)          
+            st.image("media/BernardoKautz.jpg", use_container_width=True)          
             st.markdown("Sócio / Diretor &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Economista")
             
             icon_col1, icon_col2, icon_col3, icon_col4 = st.columns(4)
