@@ -330,7 +330,7 @@ def main_app():
             st.markdown("#### Bernardo Kautz")
             st.image("media/BernardoKautz.jpg", use_container_width=True)          
             st.markdown("Sócio / Diretor &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Economista")
-            
+            st.text("Financista, mestrando em Economia Aplicada na Universidade de São Paulo (USP), com experiência profissional em captação de recursos à inovação.")
             icon_col1, icon_col2, icon_col3, icon_col4 = st.columns(4)
             
             with icon_col1:
@@ -357,6 +357,7 @@ def main_app():
             st.markdown("#### Gustavo Collioni")
             st.image("media/GustavoCollioni.jpg", use_container_width=True)
             st.markdown("Sócio / Diretor &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Economista")
+            st.text("Financista, mestrando em Desenvolvimento Regional na Pontifícia Universidade Católica do Rio Grande do Sul (PUCRS), certificado como especialista em investimentos, com experiência profissional em gestão de patrimônio.")
 
             icon_col5, icon_col6, icon_col7, icon_col8 = st.columns(4)
 
