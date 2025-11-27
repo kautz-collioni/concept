@@ -328,7 +328,7 @@ def main_app():
 
         with col1:
             st.markdown("#### Bernardo Kautz")
-            st.image("media/Bernardo Kautz - Streamlit.png", use_container_width=True)          
+            st.image("media/BernardoKautz.png", use_container_width=True)          
             st.markdown("Sócio / Diretor &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Economista")
             
             icon_col1, icon_col2, icon_col3, icon_col4 = st.columns(4)
@@ -355,7 +355,7 @@ def main_app():
 
         with col2:
             st.markdown("#### Gustavo Collioni")
-            st.image("media/Gustavo A. Collioni - Streamlit.jpg", use_container_width=True)
+            st.image("media/GustavoCollioni.jpg", use_container_width=True)
             st.markdown("Sócio / Diretor &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Economista")
 
             icon_col5, icon_col6, icon_col7, icon_col8 = st.columns(4)
