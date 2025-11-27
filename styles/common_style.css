@@ -75,3 +75,13 @@ div[data-testid="stDownloadButton"] > button:active {
 button[data-testid="manage-app-button"] {
     display: none !important;
 }
+
+footer {visibility: hidden;}
+
+.st-emotion-cache-nahz7x {
+    display: none !important;
+}
+
+a[href="https://streamlit.io/cloud"] {
+    display: none !important;
+}
