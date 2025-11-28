@@ -100,6 +100,6 @@ div [data-testid="stToolbar"] {
 }
 
 header {
-    display: block !important;
+    
     visibility: visible !important;
 }
