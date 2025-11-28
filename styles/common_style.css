@@ -79,3 +79,27 @@ button[data-testid="manage-app-button"] {
 div[data-testid="stText"] > div {
     font-size: 13px !important;
 }
+
+div [data-testid="stImageContainer"] img {
+    max-width: 65% !important;
+    width: auto !important;
+}
+
+div [data-testid="stImageContainer"] {
+    max-width: 65% !important;
+}
+
+#MainMenu {
+    display: block !important;
+    visibility: hidden !important;
+}
+
+div [data-testid="stToolbar"] {
+    visibility: hidden !important;
+    display: block !important;
+}
+
+header {
+    display: block !important;
+    visibility: hidden !important;
+}
