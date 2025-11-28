@@ -141,7 +141,7 @@ def main_app():
             st.markdown(
                 f"""
                 <div class="logo-container" style='text-align: center; margin-bottom: -15rem; z-index: 1; margin-top: -4rem; cursor : pointer;'>
-                        <img src='data:image/svg+xml;base64,{image_base64}' style='width: 100%; height: 60%; pointer-events: none; user-select: none; -webkit-user-drag: none;' draggable='false; margin-bottom: -15rem; top: -4rem; position: relative; padding-bottom: 0rem; z-index: 1;'>
+                        <img src='data:image/svg+xml;base64,{image_base64}' style='width: 100%; height: 60%; pointer-events: none; user-select: none; -webkit-user-drag: none;' draggable='false; margin-bottom: -15rem; top: -4rem; position: relative; padding-bottom: 0rem; z-index: 2;'>
                 </div>
 
                 """,
@@ -149,7 +149,7 @@ def main_app():
             )
             st.markdown("""
                 <style>
-                    .invisible-btn {
+                    .div[class="st-key-invisible_btn"] > button {
                         width: 100%; 
                         height: 60%; 
                         pointer-events: none; 
@@ -163,12 +163,12 @@ def main_app():
                     }
                 </style>
             """, unsafe_allow_html=True)
-            
+
         except Exception as e:
             st.error(f"Erro ao carregar a imagem: {e}")
             st.markdown("<h4>Kautz-Collioni & Cia.</h4>", unsafe_allow_html=True)
         
-        st.button("Botão Invisível", key="invisible_btn", on_click=go_to_homepage, use_container_width=True)
+        st.button("Botão Invisível", key="invisible_btn", on_click=go_to_homepage)
 
         # User greeting
         st.markdown(f'<div class="user-greeting">Olá, {st.session_state.username}!</div>', unsafe_allow_html=True)
