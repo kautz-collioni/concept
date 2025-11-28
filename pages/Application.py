@@ -49,6 +49,11 @@ def back_to_login():
     st.session_state.logged_in = False
     st.switch_page("Login.py")
 
+# ======================== 3. HOMEPAGE FUNCTION ========================
+
+def go_to_homepage():
+    st.session_state.current_section = "Introdução"
+
 # ======================== 4. MAIN APPLICATION ========================
 
 def main_app():
@@ -136,7 +141,7 @@ def main_app():
             st.markdown(
                 f"""
                 <div class="logo-container" style='text-align: center; margin-bottom: -15rem; z-index: 1; margin-top: -4rem;'>
-                    <img src='data:image/svg+xml;base64,{image_base64}' style='width: 100%; height: 60%; pointer-events: none; user-select: none; -webkit-user-drag: none;' draggable='false; margin-bottom: -15rem; top: -4rem; position: relative; padding-bottom: 0rem; z-index: 1;'>
+                        <img src='data:image/svg+xml;base64,{image_base64}' style='width: 100%; height: 60%; pointer-events: none; user-select: none; -webkit-user-drag: none;' draggable='false; margin-bottom: -15rem; top: -4rem; position: relative; padding-bottom: 0rem; z-index: 1;'>
                 </div>
                 """,
                 unsafe_allow_html = True
@@ -329,8 +334,8 @@ def main_app():
         with col1:
             st.markdown("#### Bernardo Kautz")
             st.image("media/BernardoKautz.jpg", use_container_width=True)          
-            st.markdown("Sócio / Diretor &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Economista")
-            st.text("Financista, mestrando em Economia Aplicada na Universidade de São Paulo (USP), com experiência profissional em captação de recursos à inovação.")
+            st.markdown("Sócio-diretor &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Economista")
+            st.text("Financista, mestrando em Economia Aplicada na Universidade de São Paulo (USP), com experiência profissional em captação de recursos à inovação e pesquisa acadêmica.")
             icon_col1, icon_col2, icon_col3, icon_col4 = st.columns(4)
             
             with icon_col1:
@@ -354,9 +359,9 @@ def main_app():
                 st.markdown(" ")
 
         with col2:
-            st.markdown("#### Gustavo Collioni")
+            st.markdown("#### Gustavo A. Collioni")
             st.image("media/GustavoCollioni.jpg", use_container_width=True)
-            st.markdown("Sócio / Diretor &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Economista")
+            st.markdown("Sócio-diretor &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Economista")
             st.text("Financista, mestrando em Desenvolvimento Regional na Pontifícia Universidade Católica do Rio Grande do Sul (PUCRS), certificado como especialista em investimentos, com experiência profissional em gestão de patrimônio.")
 
             icon_col5, icon_col6, icon_col7, icon_col8 = st.columns(4)
