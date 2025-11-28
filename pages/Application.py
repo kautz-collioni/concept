@@ -52,7 +52,7 @@ def back_to_login():
 # ======================== 3. HOMEPAGE FUNCTION ========================
 
 def go_to_homepage():
-    st.session_state.current_section = "Introdução"
+    st.session_state.nav_radio = "Introdução"
 
 # ======================== 4. MAIN APPLICATION ========================
 
@@ -134,6 +134,43 @@ def main_app():
     st.markdown("---")
 
     with st.sidebar:
+        st.markdown('''<style>"
+            div[data-testid="stButton"][key="invisible_btn"] {
+                position: absolute; 
+                top: 0; 
+                left: 0;
+                width: 100%;
+                /* Ajuste esta altura! Sugiro começar com 150px, pois seu logo parece ser alto */
+                height: 150px; 
+                z-index: 1000; /* Garante que ele fique acima da imagem */
+                margin: 0;
+                padding: 0;
+            }
+
+            /* 2. ESTILO DO ELEMENTO <BUTTON> INTERNO: Transparência e Remoção do Texto */
+            /* Seleciona o elemento <button> dentro do contêiner com a chave correta */
+            div[data-testid="stButton"][key="invisible_btn"] > button {
+                background-color: transparent !important;
+                color: transparent !important; 
+                border: none !important;
+                box-shadow: none !important;
+                width: 100%;
+                height: 100%;
+                cursor: pointer !important;
+                /* Remove o texto "Botão Invisível" do campo de visão */
+                font-size: 0; 
+                padding: 0;
+            }
+
+            /* 3. Garante que o clique passe pela imagem */
+            .logo-container img {
+                z-index: 1 !important; /* Deve ter z-index menor que o botão (1000) */
+                pointer-events: none !important;
+            }
+        }
+        "</style>''',
+        unsafe_allow_html=True)
+
         # Loading the sidebar header logo
         try:
             with open("media/Cabecalho.svg", "rb") as f:
@@ -147,22 +184,6 @@ def main_app():
                 """,
                 unsafe_allow_html = True
             )
-            st.markdown("""
-                <style>
-                    .div[class="st-key-invisible_btn"] > button {
-                        width: 100%; 
-                        height: 60%; 
-                        pointer-events: none; 
-                        user-select: none; 
-                        -webkit-user-drag: none;
-                        position: relative; 
-                        z-index: 1; 
-                        margin-bottom: -15rem; 
-                        margin-top: -4rem;
-                        padding-bottom: 0rem;
-                    }
-                </style>
-            """, unsafe_allow_html=True)
 
         except Exception as e:
             st.error(f"Erro ao carregar a imagem: {e}")
