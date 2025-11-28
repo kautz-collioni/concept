@@ -95,7 +95,13 @@ div [data-testid="stImageContainer"] {
 }
 
 div [data-testid="stToolbar"] {
+    
 }
 
 header {
+    visibility: hidden !important;
+}
+
+button[data-testid="stExpandSidebarButton"] {
+    visibility: visible !important;
 }
