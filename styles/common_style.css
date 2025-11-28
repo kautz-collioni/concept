@@ -101,5 +101,5 @@ div [data-testid="stToolbar"] {
 
 header {
     display: block !important;
-    visibility: hidden !important;
+    visibility: visible !important;
 }
