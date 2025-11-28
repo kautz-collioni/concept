@@ -94,10 +94,6 @@ div [data-testid="stImageContainer"] {
     visibility: hidden !important;
 }
 
-div [data-testid="stToolbar"] {
-    
-}
-
 header {
     visibility: hidden !important;
 }
