@@ -95,11 +95,7 @@ div [data-testid="stImageContainer"] {
 }
 
 div [data-testid="stToolbar"] {
-    visibility: hidden !important;
-    display: block !important;
 }
 
 header {
-    
-    visibility: visible !important;
 }
